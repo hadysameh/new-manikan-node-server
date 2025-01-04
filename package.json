@@ -1,0 +1,28 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "logSpikes": "node logSpikes.js",
+    "buildUi": "node ./ui/compileReact.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
+    "@serialport/parser-readline": "^12.0.0",
+    "electron": "^33.2.0",
+    "express": "^4.19.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "serialport": "^12.0.0",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.8.1"
+  }
+}

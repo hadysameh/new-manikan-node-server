@@ -1,0 +1,10 @@
+{
+    "mixamorig:LeftArm.X": -90,
+    "mixamorig:LeftArm.Y": 90,
+    "mixamorig:LeftArm.Z": -90,
+    "mixamorig:RightArm.X": 90,
+    "mixamorig:RightArm.Y": 0,
+    "mixamorig:RightArm.Z": 0,
+    "mixamorig:RightForeArm.Z": 45,
+    "mixamorig:LeftForeArm.Z": 90
+}
