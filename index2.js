@@ -86,20 +86,20 @@ const handleArduinoData = (data, sideName) => {
       'mixamorig:LeftLeg.X': parsedData[0],
       'mixamorig:LeftUpLeg.Z': parsedData[1],
       'mixamorig:LeftUpLeg.Y': -1 * parsedData[2],
-      'mixamorig:LeftForeArm.Z': -1 * parsedData[3],
+      'mixamorig:LeftUpLeg.X': parsedData[3],
       'mixamorig:LeftArm.Z': -1 * parsedData[4],
       'mixamorig:LeftArm.Y': -1 * parsedData[5],
       'mixamorig:LeftArm.X': parsedData[6],
-      'mixamorig:LeftUpLeg.X': parsedData[7],
+      'mixamorig:LeftForeArm.Z': -1 * parsedData[7],
     };
     const rightBonesVolts = {
       'mixamorig:RightUpLeg.X': parsedData[3],
       'mixamorig:RightUpLeg.Y': parsedData[2],
-      'mixamorig:RightUpLeg.Z': parsedData[1],
+      'mixamorig:RightUpLeg.Z': -1 * parsedData[1],
       'mixamorig:RightLeg.X': parsedData[0],
-      'mixamorig:RightForeArm.Z': parsedData[7],
-      'mixamorig:RightArm.Z': parsedData[6],
-      'mixamorig:RightArm.Y': parsedData[5],
+      'mixamorig:RightForeArm.Z': -1 * parsedData[7],
+      'mixamorig:RightArm.Z': -1 * parsedData[6],
+      'mixamorig:RightArm.Y': -1 * parsedData[5],
       'mixamorig:RightArm.X': parsedData[4],
     };
 
@@ -113,9 +113,10 @@ const handleArduinoData = (data, sideName) => {
       storeCalibrationData();
     }
     const calibratedBonesVolts = calibrateBonesVoltages(bonesVolts);
-    const bonesAngles = getBonesAngles(calibratedBonesVolts);
-
-    console.log({ bonesAngles });
+    let bonesAngles = getBonesAngles(calibratedBonesVolts);
+    const pythonCodes = require('./3AxesPythonCodes.js');
+    bonesAngles = { ...bonesAngles, ...pythonCodes };
+    // console.log({ bonesAngles });
     io.emit('arduinoData', bonesAngles);
   } catch (ok) {}
 };
@@ -129,33 +130,6 @@ function storeCalibrationData() {
     );
   }, 100);
 }
-
-// const handleRightArduinoData = (data) => {
-//   try {
-//     let parsedData = JSON.parse(data);
-
-//     const rightBonesVolts = {
-//       'mixamorig:RightUpLeg.X': parsedData[0],
-//       'mixamorig:RightUpLeg.Y': parsedData[1],
-//       'mixamorig:RightUpLeg.Z': parsedData[2],
-//       'mixamorig:RightLeg.Z': parsedData[3],
-//       'mixamorig:RightForeArm.Z': parsedData[4],
-//       'mixamorig:RightArm.Y': parsedData[6],
-//       'mixamorig:RightArm.X': parsedData[7],
-//       'mixamorig:RightArm.Z': parsedData[5],
-//     };
-//     if (isTocalibrate) {
-//       calibrationVolts = { ...calibrationVolts, ...rightBonesVolts };
-//       isTocalibrate = false;
-//     }
-//     const calibratedBonesVolts = calibrateBonesVoltages(rightBonesVolts);
-//     const bonesAngles = getBonesAngles(calibratedBonesVolts);
-
-//     fs.writeFileSync('./calibrationData.json', JSON.stringify(bonesAngles));
-
-//     io.emit('arduinoData', bonesAngles);
-//   } catch (ok) {}
-// };
 
 try {
   const leftPortName = 'COM' + LEFT_PORT;
