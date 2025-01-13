@@ -1,3 +1,4 @@
+'use strict';
 const path = require('path');
 const { SerialPort, ReadlineParser } = require('serialport');
 const express = require('express');
@@ -8,55 +9,58 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const parser = new ReadlineParser();
+const leftParser = new ReadlineParser();
+const rightParser = new ReadlineParser();
 
 let isTocalibrate = false;
+const LEFT_PORT = 10;
+const RIGHT_PORT = 9;
+const MAX_VOLT = 4.75;
+const MAX_ANGLE = 275;
 
-const allowedVoltError = 20;
+const stoerdCalibrationVolts = fs.readFileSync(
+  './calibrationData.json',
+  'utf-8'
+);
 
 let calibrationVolts = {
-  'mixamorig:LeftForeArm.Z': -1012,
-  'mixamorig:LeftArm.Y': -470,
-  'mixamorig:LeftArm.X': 1023,
-  'mixamorig:LeftArm.Z': -335,
-  'mixamorig:RightForeArm.Z': -410,
-  'mixamorig:RightArm.Y': -411,
-  'mixamorig:RightArm.X': -202,
-  'mixamorig:RightArm.Z': -713,
-};
-
-let previousArduinoData = {
-  'mixamorig:LeftArm.Z': 0,
-  'mixamorig:LeftArm.X': 0,
-  'mixamorig:LeftArm.Y': 0,
+  'mixamorig:LeftUpLeg.X': 0,
+  'mixamorig:LeftUpLeg.Y': 0,
+  'mixamorig:LeftUpLeg.Z': 0,
+  'mixamorig:LeftLeg.Z': 0,
   'mixamorig:LeftForeArm.Z': 0,
-  'mixamorig:RightArm.Z': 0,
-  'mixamorig:RightArm.X': 0,
-  'mixamorig:RightArm.Y': 0,
+  'mixamorig:LeftArm.Y': 0,
+  'mixamorig:LeftArm.X': 0,
+  'mixamorig:LeftArm.Z': 0,
+  'mixamorig:RightUpLeg.X': 0,
+  'mixamorig:RightUpLeg.Y': 0,
+  'mixamorig:RightUpLeg.Z': 0,
+  'mixamorig:RightLeg.Z': 0,
   'mixamorig:RightForeArm.Z': 0,
+  'mixamorig:RightArm.Y': 0,
+  'mixamorig:RightArm.X': 0,
+  'mixamorig:RightArm.Z': 0,
+  ...JSON.parse(stoerdCalibrationVolts),
 };
 
-function roundDownToStep(number, step = 11) {
-  return Math.floor(number / step) * step;
+function calibrateBonesVoltages(voltagesObj) {
+  const calibratedVoltages = {};
+  for (const boneName in voltagesObj) {
+    const boneVolt = voltagesObj[boneName];
+    calibratedVoltages[boneName] = boneVolt - calibrationVolts[boneName];
+  }
+  return calibratedVoltages;
 }
 
-function correctBoneVoltError(boneName, newBoneVolt) {
-  const previousBoneVolt = previousArduinoData[boneName];
-
-  const voltDiff = Math.abs(previousBoneVolt - newBoneVolt);
-
-  let correctedBoneVolt = 0;
-  const isToUseNewBoneVolt = voltDiff > allowedVoltError;
-
-  if (isToUseNewBoneVolt) {
-    correctedBoneVolt = newBoneVolt;
-  } else {
-    correctedBoneVolt = previousBoneVolt;
+function getBonesAngles(calibratedBonesVolts) {
+  const bonesAngles = {};
+  for (const boneName in calibratedBonesVolts) {
+    const boneVolt = calibratedBonesVolts[boneName];
+    bonesAngles[boneName] = Math.ceil(
+      boneVolt / ((1023 * MAX_VOLT) / 5 / MAX_ANGLE)
+    );
   }
-
-  const calibratedBoneVolt = correctedBoneVolt - calibrationVolts[boneName];
-
-  return calibratedBoneVolt;
+  return bonesAngles;
 }
 
 app.post('/calibrate', (req, res) => {
@@ -69,127 +73,112 @@ app.get('/ui', (req, res) => {
 });
 
 const recievedData = [];
-const handleArduinoData = (data) => {
+/**
+ *
+ * @param {any} data
+ * @param {string} sideName
+ */
+const handleArduinoData = (data, sideName) => {
   try {
     let parsedData = JSON.parse(data);
-
-    parsedData = parsedData.map((volt) => -1 * volt);
-    parsedData[2] = -1 * parsedData[2];
-
-    const correctedBoneVoltages = {
-      'mixamorig:LeftForeArm.Z': correctBoneVoltError(
-        'mixamorig:LeftForeArm.Z',
-        parsedData[0]
-      ),
-
-      'mixamorig:LeftArm.Y': correctBoneVoltError(
-        'mixamorig:LeftArm.Y',
-        parsedData[1]
-      ),
-
-      'mixamorig:LeftArm.X': correctBoneVoltError(
-        'mixamorig:LeftArm.X',
-        parsedData[2]
-      ),
-      'mixamorig:LeftArm.Z': correctBoneVoltError(
-        'mixamorig:LeftArm.Z',
-        parsedData[3]
-      ),
-
-      'mixamorig:RightForeArm.Z': correctBoneVoltError(
-        'mixamorig:RightForeArm.Z',
-        parsedData[7]
-      ),
-      'mixamorig:RightArm.Y': correctBoneVoltError(
-        'mixamorig:RightArm.Y',
-        parsedData[6]
-      ),
-      'mixamorig:RightArm.X': correctBoneVoltError(
-        'mixamorig:RightArm.X',
-        parsedData[5]
-      ),
-
-      'mixamorig:RightArm.Z': correctBoneVoltError(
-        'mixamorig:RightArm.Z',
-        parsedData[4]
-      ),
+    let bonesVolts = {};
+    const leftBonesVolts = {
+      'mixamorig:LeftLeg.X': parsedData[0],
+      'mixamorig:LeftUpLeg.Z': parsedData[1],
+      'mixamorig:LeftUpLeg.Y': -1 * parsedData[2],
+      'mixamorig:LeftUpLeg.X': parsedData[3],
+      'mixamorig:LeftArm.Z': -1 * parsedData[4],
+      'mixamorig:LeftArm.Y': -1 * parsedData[5],
+      'mixamorig:LeftArm.X': parsedData[6],
+      'mixamorig:LeftForeArm.Z': -1 * parsedData[7],
+    };
+    const rightBonesVolts = {
+      'mixamorig:RightUpLeg.X': parsedData[3],
+      'mixamorig:RightUpLeg.Y': parsedData[2],
+      'mixamorig:RightUpLeg.Z': -1 * parsedData[1],
+      'mixamorig:RightLeg.X': parsedData[0],
+      'mixamorig:RightForeArm.Z': -1 * parsedData[7],
+      'mixamorig:RightArm.Z': -1 * parsedData[6],
+      'mixamorig:RightArm.Y': -1 * parsedData[5],
+      'mixamorig:RightArm.X': parsedData[4],
     };
 
-    const calibratedBonesAngles = {
-      'mixamorig:LeftForeArm.Z': Math.floor(
-        correctedBoneVoltages['mixamorig:LeftForeArm.Z'] / 3.72
-      ),
-
-      'mixamorig:LeftArm.Y': Math.floor(
-        correctedBoneVoltages['mixamorig:LeftArm.Y'] / 3.72
-      ),
-
-      'mixamorig:LeftArm.X': Math.floor(
-        correctedBoneVoltages['mixamorig:LeftArm.X'] / 3.72
-      ),
-
-      'mixamorig:LeftArm.Z': Math.floor(
-        correctedBoneVoltages['mixamorig:LeftArm.Z'] / 3.72
-      ),
-
-      'mixamorig:RightForeArm.Z': Math.floor(
-        correctedBoneVoltages['mixamorig:RightForeArm.Z'] / 3.72
-      ),
-
-      'mixamorig:RightArm.Y': Math.floor(
-        correctedBoneVoltages['mixamorig:RightArm.Y'] / 3.72
-      ),
-
-      'mixamorig:RightArm.X': Math.floor(
-        correctedBoneVoltages['mixamorig:RightArm.X'] / 3.72
-      ),
-
-      'mixamorig:RightArm.Z': Math.floor(
-        correctedBoneVoltages['mixamorig:RightArm.Z'] / 3.72
-      ),
-    };
-
-    if (isTocalibrate) {
-      calibrationVolts = { ...correctedBoneVoltages };
-      console.log({ calibrationVolts });
-      isTocalibrate = false;
+    if (sideName == 'left') {
+      bonesVolts = { ...leftBonesVolts };
+    } else if (sideName == 'right') {
+      bonesVolts = { ...rightBonesVolts };
     }
-
-    console.log({ calibratedBonesAngles });
-
-    recievedData.push(parsedData);
-    previousArduinoData = { ...correctedBoneVoltages };
-
-    io.emit('arduinoData', calibratedBonesAngles);
+    if (isTocalibrate) {
+      calibrationVolts = { ...calibrationVolts, ...bonesVolts };
+      storeCalibrationData();
+    }
+    const calibratedBonesVolts = calibrateBonesVoltages(bonesVolts);
+    let bonesAngles = getBonesAngles(calibratedBonesVolts);
+    const pythonCodes = require('./3AxesPythonCodes.js');
+    bonesAngles = { ...bonesAngles, ...pythonCodes };
+    // console.log({ bonesAngles });
+    io.emit('arduinoData', bonesAngles);
   } catch (ok) {}
 };
 
+function storeCalibrationData() {
+  setTimeout(() => {
+    isTocalibrate = false;
+    fs.writeFileSync(
+      './calibrationData.json',
+      JSON.stringify(calibrationVolts)
+    );
+  }, 100);
+}
+
 try {
-  const portName = 'COM6';
-  const port = new SerialPort({
-    path: portName,
+  const leftPortName = 'COM' + LEFT_PORT;
+  const rightPortName = 'COM' + RIGHT_PORT;
+
+  const leftPort = new SerialPort({
+    path: leftPortName,
     baudRate: 9600,
     autoOpen: false, // Do not auto-open to handle errors properly
   });
 
+  const rightPort = new SerialPort({
+    path: rightPortName,
+    baudRate: 9600,
+    autoOpen: false, // Do not auto-open to handle errors properly
+  });
   // Handle connection errors
-  port.open((err) => {
+  leftPort.open((err) => {
     if (err) {
-      console.warn(`Failed to open port ${portName}:`, err.message);
+      console.warn(`Failed to open port ${leftPortName}:`, err.message);
       return;
     }
-    console.log(`Port ${portName} opened successfully.`);
+    console.log(`Port ${leftPortName} opened successfully.`);
+  });
+
+  rightPort.open((err) => {
+    if (err) {
+      console.warn(`Failed to open port ${leftPortName}:`, err.message);
+      return;
+    }
+    console.log(`Port ${rightPortName} opened successfully.`);
   });
 
   // Handle general errors
-  port.on('error', (err) => {
+  leftPort.on('error', (err) => {
     console.error(`Serial port error: ${err.message}`);
   });
-  // const port = new SerialPort({ path: 'COM6', baudRate: 9600 });
 
-  port.pipe(parser);
-  parser.on('data', handleArduinoData);
-  port.write('ROBOT PLEASE RESPOND\n');
+  rightPort.on('error', (err) => {
+    console.error(`Serial port error: ${err.message}`);
+  });
+
+  leftPort.pipe(leftParser);
+  rightPort.pipe(rightParser);
+
+  leftParser.on('data', (data) => handleArduinoData(data, 'left'));
+  rightParser.on('data', (data) => handleArduinoData(data, 'right'));
+
+  leftPort.write('ROBOT PLEASE RESPOND\n');
 } catch (error) {}
 
 // Handle client connections

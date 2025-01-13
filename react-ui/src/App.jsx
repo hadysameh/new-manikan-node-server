@@ -1,29 +1,29 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import { BoneAnlgeInput } from './components/BoneAnlgeInput';
+import BoneAnlgeInput from './components/BoneAxisAnlgeInput';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BoneCustomAxesInput } from './components/BoneCustomAxesInput';
 
 function App() {
   const bonesAxesCalibrationDataSchema = {
-    'mixamorig:LeftUpLeg.X': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:LeftUpLeg.Y': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:LeftUpLeg.Z': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:LeftLeg.Z': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:LeftForeArm.Z': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:LeftArm.Y': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:LeftArm.X': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:LeftArm.Z': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightUpLeg.X': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightUpLeg.Y': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightUpLeg.Z': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightLeg.Z': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightForeArm.Z': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightArm.Y': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightArm.X': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightArm.Z': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:LeftLeg.X': { isPositiveSign: true, calibrationVolt: 0 },
-    'mixamorig:RightLeg.X': { isPositiveSign: true, calibrationVolt: 0 },
+    'mixamorig:LeftUpLeg.X': { isPositiveSign: true, angle: 0 },
+    'mixamorig:LeftUpLeg.Y': { isPositiveSign: true, angle: 0 },
+    'mixamorig:LeftUpLeg.Z': { isPositiveSign: true, angle: 0 },
+    'mixamorig:LeftLeg.Z': { isPositiveSign: true, angle: 0 },
+    'mixamorig:LeftForeArm.Z': { isPositiveSign: true, angle: 0 },
+    'mixamorig:LeftArm.Y': { isPositiveSign: true, angle: 0 },
+    'mixamorig:LeftArm.X': { isPositiveSign: true, angle: 0 },
+    'mixamorig:LeftArm.Z': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightUpLeg.X': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightUpLeg.Y': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightUpLeg.Z': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightLeg.Z': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightForeArm.Z': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightArm.Y': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightArm.X': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightArm.Z': { isPositiveSign: true, angle: 0 },
+    'mixamorig:LeftLeg.X': { isPositiveSign: true, angle: 0 },
+    'mixamorig:RightLeg.X': { isPositiveSign: true, angle: 0 },
   };
 
   const bonesWithCustomAxesSchema = {
@@ -55,10 +55,10 @@ function App() {
     ...bonesWithCustomAxesSchema,
   });
 
-  const setBoneAxisCalibrationVolt = (boneAxisName, calibrationVolt) => {
+  const setBoneAxisangle = (boneAxisName, angle) => {
     setBonesAxesCalibrationData((prev) => {
       const newStat = { ...prev };
-      newStat[boneAxisName] = { ...newStat[boneAxisName], calibrationVolt };
+      newStat[boneAxisName] = { ...newStat[boneAxisName], angle };
       return newStat;
     });
   };
@@ -94,9 +94,14 @@ function App() {
       <div className="row">
         <div className="col-9">
           <div className="row">
-            {Object.keys(bonesAxesCalibrationData).map((boneName) => (
+            {Object.keys(bonesAxesCalibrationData).map((boneAxisName) => (
               <div className="col-6">
-                <BoneAnlgeInput />
+                <BoneAnlgeInput
+                  boneAxisName={boneAxisName}
+                  boneAxisBoneData={bonesAxesCalibrationData[boneAxisName]}
+                  setBoneAxisangle={setBoneAxisangle}
+                  setIsBoneAxisVoltPositive={setIsBoneAxisVoltPositive}
+                />
               </div>
             ))}
             <div className="my-4">

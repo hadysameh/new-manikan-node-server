@@ -1,0 +1,74 @@
+{
+    "mixamorig:LeftUpLeg.X": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:LeftUpLeg.Y": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:LeftUpLeg.Z": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:LeftLeg.Z": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:LeftForeArm.Z": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:LeftArm.Y": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:LeftArm.X": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:LeftArm.Z": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightUpLeg.X": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightUpLeg.Y": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightUpLeg.Z": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightLeg.Z": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightForeArm.Z": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightArm.Y": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightArm.X": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightArm.Z": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:LeftLeg.X": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    },
+    "mixamorig:RightLeg.X": {
+        "isPositiveSign": true,
+        "calibrationVolt": 0
+    }
+}
