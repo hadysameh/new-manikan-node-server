@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "build:react": "cd react-ui && npm run build",
+    "start:server": "nodemon index.js",
+    "start": "npm-run-all build:react start:server",
     "logSpikes": "node logSpikes.js",
     "buildUi": "node ./ui/compileReact.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,5 +27,9 @@
     "serialport": "^12.0.0",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "npm-run-all": "^4.1.5"
   }
 }

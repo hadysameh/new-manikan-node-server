@@ -4,7 +4,11 @@ const { SerialPort, ReadlineParser } = require('serialport');
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const EventEmitter = require('events');
 const fs = require('fs');
+const calibrationRouter = require('./routes/calibrationRouter.js');
+const db = require('./db/index');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -12,16 +16,70 @@ const io = socketIo(server);
 const leftParser = new ReadlineParser();
 const rightParser = new ReadlineParser();
 
-let isTocalibrate = false;
+let isTocalibrateAngles = false;
 const LEFT_PORT = 10;
 const RIGHT_PORT = 9;
 const MAX_VOLT = 4.75;
 const MAX_ANGLE = 275;
 
-const stoerdCalibrationVolts = fs.readFileSync(
-  './calibrationData.json',
-  'utf-8'
-);
+const eventEmitter = new EventEmitter();
+
+const getLimbPythonCode = (customAxesCode) => {
+  return `
+my_dict = {
+# Add your key-value pairs here
+}
+arm_bone_radian_angles = {  }
+arm_bone_radian_angles['Y'] = math.radians( arm_bone_degree_angles['Y'] )
+arm_bone_radian_angles['X'] = math.radians( arm_bone_degree_angles['X'])
+arm_bone_radian_angles['Z'] = math.radians( arm_bone_degree_angles['Z'])
+ 
+armature_obj = bpy.data.objects.get(armature_name)
+
+# bpy.ops.object.mode_set(mode='POSE')
+ 
+pose_bone = get_pose_bone(armature_name,bone_name=arm_bone_name)
+
+pose_bone.rotation_mode = "QUATERNION"
+
+pose_bone.rotation_quaternion = (1, 0, 0, 0)
+bpy.context.view_layer.update()
+
+
+local_y_rotation = mathutils.Quaternion(mathutils.Vector((0, 1, 0)), arm_bone_radian_angles['Z'])
+
+bone_x_axis, bone_y_axis, bone_z_axis = get_bone_global_axes(armature_name, arm_bone_name)
+# Convert the custom axis to the bone's local space
+${customAxesCode}
+# Create a quaternion rotation
+quat_x_rotation =mathutils.Quaternion(custom_x_axis_local, arm_bone_radian_angles['X'])
+quat_z_rotation =mathutils.Quaternion(custom_z_axis_local, arm_bone_radian_angles['Y'])
+
+# Apply the rotation in the bone's local space
+pose_bone.rotation_quaternion = quat_z_rotation @ quat_x_rotation  @local_y_rotation
+bpy.context.view_layer.update()
+    `;
+};
+
+// Define an event listener
+eventEmitter.on('calibrateAngels', () => {
+  isTocalibrateAngles = true;
+});
+
+let voltSignsCalibrations = db.get('calibrationSigns');
+
+eventEmitter.on('calibrateVoltSign', () => {
+  voltSignsCalibrations = db.get('calibrationSigns');
+});
+
+const getCustomAxesCalibration = () => {};
+let customAxesCalibration = db.get('calibrateCustomAxis');
+
+eventEmitter.on('calibrateCustomAxis', () => {
+  customAxesCalibration = db.get('calibrateCustomAxis');
+});
+
+const stoerdCalibrationVolts = db.get('calibrationVolts');
 
 let calibrationVolts = {
   'mixamorig:LeftUpLeg.X': 0,
@@ -40,7 +98,7 @@ let calibrationVolts = {
   'mixamorig:RightArm.Y': 0,
   'mixamorig:RightArm.X': 0,
   'mixamorig:RightArm.Z': 0,
-  ...JSON.parse(stoerdCalibrationVolts),
+  ...stoerdCalibrationVolts,
 };
 
 function calibrateBonesVoltages(voltagesObj) {
@@ -63,9 +121,10 @@ function getBonesAngles(calibratedBonesVolts) {
   return bonesAngles;
 }
 
-app.post('/calibrate', (req, res) => {
-  isTocalibrate = true;
-  res.status(201).json({});
+app.use('/api', calibrationRouter);
+
+app.get('/*', (req, res) => {
+  res.sendFile(__dirname + '/react-ui/dist/index.html');
 });
 
 app.get('/ui', (req, res) => {
@@ -83,24 +142,40 @@ const handleArduinoData = (data, sideName) => {
     let parsedData = JSON.parse(data);
     let bonesVolts = {};
     const leftBonesVolts = {
-      'mixamorig:LeftLeg.X': parsedData[0],
-      'mixamorig:LeftUpLeg.Z': parsedData[1],
-      'mixamorig:LeftUpLeg.Y': -1 * parsedData[2],
-      'mixamorig:LeftUpLeg.X': parsedData[3],
-      'mixamorig:LeftArm.Z': -1 * parsedData[4],
-      'mixamorig:LeftArm.Y': -1 * parsedData[5],
-      'mixamorig:LeftArm.X': parsedData[6],
-      'mixamorig:LeftForeArm.Z': -1 * parsedData[7],
+      'mixamorig:LeftLeg.X':
+        voltSignsCalibrations['mixamorig:LeftLeg.X'] * parsedData[0],
+      'mixamorig:LeftUpLeg.Z':
+        voltSignsCalibrations['mixamorig:LeftUpLeg.Z'] * parsedData[1],
+      'mixamorig:LeftUpLeg.Y':
+        voltSignsCalibrations['mixamorig:LeftUpLeg.Y'] * parsedData[2],
+      'mixamorig:LeftUpLeg.X':
+        voltSignsCalibrations['mixamorig:LeftUpLeg.X'] * parsedData[3],
+      'mixamorig:LeftArm.Z':
+        voltSignsCalibrations['mixamorig:LeftArm.Z'] * parsedData[4],
+      'mixamorig:LeftArm.Y':
+        voltSignsCalibrations['mixamorig:LeftArm.Y'] * parsedData[5],
+      'mixamorig:LeftArm.X':
+        voltSignsCalibrations['mixamorig:LeftArm.X'] * parsedData[6],
+      'mixamorig:LeftForeArm.Z':
+        voltSignsCalibrations['mixamorig:LeftForeArm.Z'] * parsedData[7],
     };
     const rightBonesVolts = {
-      'mixamorig:RightUpLeg.X': parsedData[3],
-      'mixamorig:RightUpLeg.Y': parsedData[2],
-      'mixamorig:RightUpLeg.Z': -1 * parsedData[1],
-      'mixamorig:RightLeg.X': parsedData[0],
-      'mixamorig:RightForeArm.Z': -1 * parsedData[7],
-      'mixamorig:RightArm.Z': -1 * parsedData[6],
-      'mixamorig:RightArm.Y': -1 * parsedData[5],
-      'mixamorig:RightArm.X': parsedData[4],
+      'mixamorig:RightUpLeg.X':
+        voltSignsCalibrations['mixamorig:RightUpLeg.X'] * parsedData[3],
+      'mixamorig:RightUpLeg.Y':
+        voltSignsCalibrations['mixamorig:RightUpLeg.Y'] * parsedData[2],
+      'mixamorig:RightUpLeg.Z':
+        voltSignsCalibrations['mixamorig:RightUpLeg.Z'] * parsedData[1],
+      'mixamorig:RightLeg.X':
+        voltSignsCalibrations['mixamorig:RightLeg.X'] * parsedData[0],
+      'mixamorig:RightForeArm.Z':
+        voltSignsCalibrations['mixamorig:RightForeArm.Z'] * parsedData[7],
+      'mixamorig:RightArm.Z':
+        voltSignsCalibrations['mixamorig:RightArm.Z'] * parsedData[6],
+      'mixamorig:RightArm.Y':
+        voltSignsCalibrations['mixamorig:RightArm.Y'] * parsedData[5],
+      'mixamorig:RightArm.X':
+        voltSignsCalibrations['mixamorig:RightArm.X'] * parsedData[4],
     };
 
     if (sideName == 'left') {
@@ -108,7 +183,7 @@ const handleArduinoData = (data, sideName) => {
     } else if (sideName == 'right') {
       bonesVolts = { ...rightBonesVolts };
     }
-    if (isTocalibrate) {
+    if (isTocalibrateAngles) {
       calibrationVolts = { ...calibrationVolts, ...bonesVolts };
       storeCalibrationData();
     }
@@ -123,11 +198,8 @@ const handleArduinoData = (data, sideName) => {
 
 function storeCalibrationData() {
   setTimeout(() => {
-    isTocalibrate = false;
-    fs.writeFileSync(
-      './calibrationData.json',
-      JSON.stringify(calibrationVolts)
-    );
+    isTocalibrateAngles = false;
+    db.set('calibrationVolts', calibrationVolts);
   }, 100);
 }
 
