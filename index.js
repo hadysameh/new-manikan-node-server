@@ -67,13 +67,16 @@ bpy.context.view_layer.update()
   const customZAxisMappings = db.get(customZAxisName);
   const bonesNames = Object.keys(customXAxisMappings);
   const pythonCodes = {};
-  for (const boneName in bonesNames) {
-    const limbPythonCode = `
-${customXAxisName} = bone_z_axis @ pose_bone.matrix.to_3x3().inverted()
-${customZAxisName} = bone_x_axis @ pose_bone.matrix.to_3x3().inverted()
+  for (const boneName of bonesNames) {
+    const localBoneAxisForCustomXAxis = customXAxisMappings[boneName];
+    const localBoneAxisForCustomZAxis = customZAxisMappings[boneName];
+    const customAxesCode = `
+${customXAxisName} = ${localBoneAxisForCustomXAxis} @ pose_bone.matrix.to_3x3().inverted()
+${customZAxisName} = ${localBoneAxisForCustomZAxis} @ pose_bone.matrix.to_3x3().inverted()
     `;
-    pythonCodes[boneName] = getLimbPythonCode();
+    pythonCodes[boneName + '.code'] = getLimbPythonCode(customAxesCode);
   }
+  return pythonCodes;
 };
 
 // Define an event listener
@@ -87,11 +90,10 @@ eventEmitter.on('calibrateVoltSign', () => {
   voltSignsCalibrations = db.get('calibrationSigns');
 });
 
-const getCustomAxesCalibration = () => {};
-let customAxesCalibration = db.get('calibrateCustomAxis');
+let pythonCodes = getLimbsPythonCodes();
 
 eventEmitter.on('calibrateCustomAxis', () => {
-  customAxesCalibration = db.get('calibrateCustomAxis');
+  pythonCodes = getLimbsPythonCodes();
 });
 
 const stoerdCalibrationVolts = db.get('calibrationVolts');
@@ -208,7 +210,6 @@ const handleArduinoData = (data, sideName) => {
     }
     const calibratedBonesVolts = calibrateBonesVoltages(bonesVolts);
     let bonesAngles = getBonesAngles(calibratedBonesVolts);
-    const pythonCodes = require('./3AxesPythonCodes.js');
     bonesAngles = { ...bonesAngles, ...pythonCodes };
     // console.log({ bonesAngles });
     io.emit('arduinoData', bonesAngles);
