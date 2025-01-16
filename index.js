@@ -24,8 +24,9 @@ const MAX_ANGLE = 275;
 
 const eventEmitter = new EventEmitter();
 
-const getLimbPythonCode = (customAxesCode) => {
-  return `
+const getLimbsPythonCodes = () => {
+  const getLimbPythonCode = (customAxesCode) => {
+    return `
 my_dict = {
 # Add your key-value pairs here
 }
@@ -59,6 +60,20 @@ quat_z_rotation =mathutils.Quaternion(custom_z_axis_local, arm_bone_radian_angle
 pose_bone.rotation_quaternion = quat_z_rotation @ quat_x_rotation  @local_y_rotation
 bpy.context.view_layer.update()
     `;
+  };
+  const customXAxisName = 'custom_x_axis_local';
+  const customZAxisName = 'custom_z_axis_local';
+  const customXAxisMappings = db.get(customXAxisName);
+  const customZAxisMappings = db.get(customZAxisName);
+  const bonesNames = Object.keys(customXAxisMappings);
+  const pythonCodes = {};
+  for (const boneName in bonesNames) {
+    const limbPythonCode = `
+${customXAxisName} = bone_z_axis @ pose_bone.matrix.to_3x3().inverted()
+${customZAxisName} = bone_x_axis @ pose_bone.matrix.to_3x3().inverted()
+    `;
+    pythonCodes[boneName] = getLimbPythonCode();
+  }
 };
 
 // Define an event listener
@@ -122,6 +137,10 @@ function getBonesAngles(calibratedBonesVolts) {
 }
 
 app.use('/api', calibrationRouter);
+
+// Serve static files from the dist directory
+const distPath = path.join(__dirname, 'react-ui', 'dist');
+app.use(express.static(distPath));
 
 app.get('/*', (req, res) => {
   res.sendFile(__dirname + '/react-ui/dist/index.html');
