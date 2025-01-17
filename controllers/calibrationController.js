@@ -19,6 +19,11 @@ const calibrateVoltSign = (req, res) => {
   res.status(200).json({});
 };
 
+const getCalibratedVoltSign = (req, res) => {
+  const calibratedVoltSigns = db.get('calibrationSigns');
+  res.status(200).json({ calibratedVoltSigns });
+};
+
 const calibrateCustomAxis = (req, res) => {
   const { boneName, customAxis, localAxis } = req.body;
   const customAxisMapping = db.get(customAxis);
@@ -29,6 +34,7 @@ const calibrateCustomAxis = (req, res) => {
 };
 
 module.exports = {
+  getCalibratedVoltSign,
   calibrateVoltSign,
   calibrateAngels,
   calibrateCustomAxis,

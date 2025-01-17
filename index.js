@@ -11,7 +11,12 @@ const db = require('./db/index');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+  cors: {
+    origin: 'http://localhost:5173', // React app's URL
+    methods: ['GET', 'POST'],
+  },
+});
 
 const leftParser = new ReadlineParser();
 const rightParser = new ReadlineParser();

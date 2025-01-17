@@ -1,30 +1,53 @@
 import './App.css';
 import { useEffect, useState } from 'react';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import socket from './socket';
 import BoneAnlgeInput from './components/BoneAxisAnlgeInput';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BoneCustomAxesInput } from './components/BoneCustomAxesInput';
 
+const queryClient = new QueryClient();
 function App() {
-  const bonesAxesCalibrationDataSchema = {
-    'mixamorig:LeftUpLeg.X': { isPositiveSign: true, angle: 0 },
-    'mixamorig:LeftUpLeg.Y': { isPositiveSign: true, angle: 0 },
-    'mixamorig:LeftUpLeg.Z': { isPositiveSign: true, angle: 0 },
-    'mixamorig:LeftLeg.Z': { isPositiveSign: true, angle: 0 },
-    'mixamorig:LeftForeArm.Z': { isPositiveSign: true, angle: 0 },
-    'mixamorig:LeftArm.Y': { isPositiveSign: true, angle: 0 },
-    'mixamorig:LeftArm.X': { isPositiveSign: true, angle: 0 },
-    'mixamorig:LeftArm.Z': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightUpLeg.X': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightUpLeg.Y': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightUpLeg.Z': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightLeg.Z': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightForeArm.Z': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightArm.Y': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightArm.X': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightArm.Z': { isPositiveSign: true, angle: 0 },
-    'mixamorig:LeftLeg.X': { isPositiveSign: true, angle: 0 },
-    'mixamorig:RightLeg.X': { isPositiveSign: true, angle: 0 },
-  };
+  const [socketMessage, setSocketMessage] = useState();
+
+  useEffect(() => {
+    // Listen for messages from the server
+    socket.on('arduinoData', (message) => {
+      // setbonAxisAngle;
+      setSocketMessage(message);
+    });
+
+    // Cleanup on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+  const bonesAxesNames = [
+    'mixamorig:LeftUpLeg.X',
+    'mixamorig:LeftUpLeg.Y',
+    'mixamorig:LeftUpLeg.Z',
+    'mixamorig:LeftLeg.X',
+    'mixamorig:LeftForeArm.Z',
+    'mixamorig:LeftArm.Y',
+    'mixamorig:LeftArm.X',
+    'mixamorig:LeftArm.Z',
+    'mixamorig:RightUpLeg.X',
+    'mixamorig:RightUpLeg.Y',
+    'mixamorig:RightUpLeg.Z',
+    'mixamorig:RightLeg.X',
+    'mixamorig:RightForeArm.Z',
+    'mixamorig:RightArm.Y',
+    'mixamorig:RightArm.X',
+    'mixamorig:RightArm.Z',
+    'mixamorig:LeftLeg.X',
+    'mixamorig:RightLeg.X',
+  ];
 
   const bonesWithCustomAxesSchema = {
     'mixamorig:LeftArm': {
@@ -47,46 +70,46 @@ function App() {
 
   const [maxVolt, setMaxVolt] = useState(4.75);
 
-  const [bonesAxesCalibrationData, setBonesAxesCalibrationData] = useState({
-    ...bonesAxesCalibrationDataSchema,
-  });
+  // const [bonesAxesCalibrationData, setBonesAxesCalibrationData] = useState({
+  //   ...bonesAxesCalibrationDataSchema,
+  // });
 
-  const [bonesWithCustomAxesData, setBonesWithCustomAxesData] = useState({
-    ...bonesWithCustomAxesSchema,
-  });
+  // const [bonesWithCustomAxesData, setBonesWithCustomAxesData] = useState({
+  //   ...bonesWithCustomAxesSchema,
+  // });
 
-  const setBoneAxisangle = (boneAxisName, angle) => {
-    setBonesAxesCalibrationData((prev) => {
-      const newStat = { ...prev };
-      newStat[boneAxisName] = { ...newStat[boneAxisName], angle };
-      return newStat;
-    });
-  };
+  // const setBoneAxisangle = (boneAxisName, angle) => {
+  //   setBonesAxesCalibrationData((prev) => {
+  //     const newStat = { ...prev };
+  //     newStat[boneAxisName] = { ...newStat[boneAxisName], angle };
+  //     return newStat;
+  //   });
+  // };
 
-  const setIsBoneAxisVoltPositive = (boneAxisName, isPositiveSign) => {
-    setBonesAxesCalibrationData((prev) => {
-      const newStat = { ...prev };
-      newStat[boneAxisName] = { ...newStat[boneAxisName], isPositiveSign };
-      return newStat;
-    });
-  };
+  // const setIsBoneAxisVoltPositive = (boneAxisName, isPositiveSign) => {
+  //   setBonesAxesCalibrationData((prev) => {
+  //     const newStat = { ...prev };
+  //     newStat[boneAxisName] = { ...newStat[boneAxisName], isPositiveSign };
+  //     return newStat;
+  //   });
+  // };
 
-  const setCustomAndLocalAxesRelation = (
-    boneName,
-    customAxisName,
-    localAxisName
-  ) => {
-    setBonesWithCustomAxesData((prev) => {
-      const newStat = { ...prev };
-      newStat[boneName] = {
-        ...newStat[boneName],
-        [customAxisName]: localAxisName,
-      };
-      return newStat;
-    });
-  };
+  // const setCustomAndLocalAxesRelation = (
+  //   boneName,
+  //   customAxisName,
+  //   localAxisName
+  // ) => {
+  //   setBonesWithCustomAxesData((prev) => {
+  //     const newStat = { ...prev };
+  //     newStat[boneName] = {
+  //       ...newStat[boneName],
+  //       [customAxisName]: localAxisName,
+  //     };
+  //     return newStat;
+  //   });
+  // };
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <div className="d-flex w-25">
         <p className="w-50">max volt:</p>
         <input type="text" className="form-control" value={maxVolt} />
@@ -94,13 +117,11 @@ function App() {
       <div className="row">
         <div className="col-9">
           <div className="row">
-            {Object.keys(bonesAxesCalibrationData).map((boneAxisName) => (
+            {bonesAxesNames.map((boneAxisName) => (
               <div className="col-6">
                 <BoneAnlgeInput
                   boneAxisName={boneAxisName}
-                  boneAxisBoneData={bonesAxesCalibrationData[boneAxisName]}
-                  setBoneAxisangle={setBoneAxisangle}
-                  setIsBoneAxisVoltPositive={setIsBoneAxisVoltPositive}
+                  socketMessage={socketMessage}
                 />
               </div>
             ))}
@@ -110,19 +131,15 @@ function App() {
           </div>
         </div>
         <div className="col-3">
-          {Object.keys(bonesWithCustomAxesData).map((boneName) => (
+          {Object.keys(bonesWithCustomAxesSchema).map((boneName) => (
             <>
-              <BoneCustomAxesInput
-                boneName={boneName}
-                bonesWithCustomAxesData={bonesWithCustomAxesData}
-                setCustomAndLocalAxesRelation={setCustomAndLocalAxesRelation}
-              />
+              {/* <BoneCustomAxesInput boneName={boneName} /> */}
               <hr />
             </>
           ))}
         </div>
       </div>
-    </>
+    </QueryClientProvider>
   );
 }
 

@@ -43,13 +43,13 @@
     "custom_x_axis_local": {
         "mixamorig:LeftArm": "bone_x_axis",
         "mixamorig:RightArm": "bone_x_axis",
-        "mixamorig:LeftUpLeg ": "bone_x_axis",
+        "mixamorig:LeftUpLeg": "bone_x_axis",
         "mixamorig:RightUpLeg": "bone_x_axis"
     },
     "custom_z_axis_local": {
         "mixamorig:LeftArm": "bone_z_axis",
         "mixamorig:RightArm": "bone_z_axis",
-        "mixamorig:LeftUpLeg ": "bone_z_axis",
+        "mixamorig:LeftUpLeg": "bone_z_axis",
         "mixamorig:RightUpLeg": "bone_z_axis"
     }
 }
