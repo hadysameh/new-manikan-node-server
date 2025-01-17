@@ -11,9 +11,9 @@ const db = require('./db/index');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = new socketIo.Server(server, {
   cors: {
-    origin: 'http://localhost:5173', // React app's URL
+    origin: 'http://localhost:5173', // React app's  URL
     methods: ['GET', 'POST'],
   },
 });

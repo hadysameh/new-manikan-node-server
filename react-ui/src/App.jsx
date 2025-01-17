@@ -25,7 +25,7 @@ function App() {
 
     // Cleanup on component unmount
     return () => {
-      socket.disconnect();
+      socket.off('arduinoData');
     };
   }, []);
   const bonesAxesNames = [
