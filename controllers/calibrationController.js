@@ -53,10 +53,14 @@ const getCalibratedCustomAxes = (req, res) => {
   res.status(200).json(calibratedCustomAxes);
 };
 
+const calibrateMaxVolt = (req, res) => {};
+
+const getCalibrateMaxVolt = (req, res) => {};
+
 module.exports = {
-  getCalibratedVoltSign,
-  calibrateVoltSign,
   calibrateAngels,
+  calibrateVoltSign,
+  getCalibratedVoltSign,
   calibrateCustomAxis,
   getCalibratedCustomAxes,
 };

@@ -219,7 +219,7 @@ const handleArduinoData = (data, sideName) => {
     }
     const calibratedBonesVolts = calibrateBonesVoltages(bonesVolts);
     let bonesAngles = getBonesAngles(calibratedBonesVolts);
-    bonesAngles = { ...bonesAngles, ...pythonCodes };
+    bonesAngles = { ...bonesAngles, ...dataHolder.pythonCodes };
     // console.log({ bonesAngles });
     io.emit('arduinoData', bonesAngles);
   } catch (ok) {}

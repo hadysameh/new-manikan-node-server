@@ -51,7 +51,6 @@ function App() {
     staleTime: Infinity,
   });
 
-  // console.log({ calibratedCustomAxes });
   const {
     mutate: mutateAnglesCalibration,
     isPending: isAnglesCalibrationPending,
@@ -63,7 +62,8 @@ function App() {
   useEffect(() => {
     // Listen for messages from the server
     socket.on('arduinoData', (message) => {
-      // setbonAxisAngle;
+      console.log(message);
+
       setSocketMessage(message);
     });
 
