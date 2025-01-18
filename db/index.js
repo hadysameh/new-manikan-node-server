@@ -18,7 +18,6 @@ const get = (key) => {
 const set = (key, value) => {
   let db = getDbJson();
   db[key] = value;
-  console.log({ ' db[key]': db[key] });
   fs.writeFileSync(__dirname + '/store.json', JSON.stringify(db));
 };
 

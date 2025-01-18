@@ -1,8 +1,7 @@
 const db = require('../db/index');
-const EventEmitter = require('events');
 
 // Create an instance of EventEmitter
-const eventEmitter = new EventEmitter();
+const eventEmitter = require('../EventEmitter.js');
 
 const calibrateAngels = (req, res) => {
   // Emit the event
@@ -14,12 +13,6 @@ const calibrateVoltSign = (req, res) => {
   const { boneAxisName, voltSign } = req.body;
   const calibratedVoltSigns = db.get('calibrationSigns');
   calibratedVoltSigns[boneAxisName] = voltSign;
-  // console.log({
-  //   boneAxisName,
-  //   voltSign,
-  //   'calibratedVoltSigns[boneAxisName]': calibratedVoltSigns[boneAxisName],
-  //   calibratedVoltSigns,
-  // });
   db.set('calibrationSigns', calibratedVoltSigns);
   eventEmitter.emit('calibrateVoltSign');
   res.status(200).json({});

@@ -4,11 +4,11 @@ const { SerialPort, ReadlineParser } = require('serialport');
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const EventEmitter = require('events');
+const cors = require('cors');
 const fs = require('fs');
 const calibrationRouter = require('./routes/calibrationRouter.js');
 const db = require('./db/index');
-const cors = require('cors');
+const eventEmitter = require('./EventEmitter.js');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,13 +22,10 @@ const io = new socketIo.Server(server, {
 const leftParser = new ReadlineParser();
 const rightParser = new ReadlineParser();
 
-let isTocalibrateAngles = false;
 const LEFT_PORT = 10;
 const RIGHT_PORT = 9;
 const MAX_VOLT = 4.75;
 const MAX_ANGLE = 275;
-
-const eventEmitter = new EventEmitter();
 
 const getLimbsPythonCodes = () => {
   const getLimbPythonCode = (customAxesCode) => {
@@ -85,22 +82,27 @@ ${customZAxisName} = ${localBoneAxisForCustomZAxis} @ pose_bone.matrix.to_3x3().
   return pythonCodes;
 };
 
-// Define an event listener
-eventEmitter.on('calibrateAngels', () => {
-  isTocalibrateAngles = true;
-});
-
+let pythonCodes = getLimbsPythonCodes();
 let voltSignsCalibrations = db.get('calibrationSigns');
 
-eventEmitter.on('calibrateVoltSign', () => {
-  voltSignsCalibrations = db.get('calibrationSigns');
+const dataHolder = {
+  voltSignsCalibrations,
+  pythonCodes,
+  isTocalibrateAngles: false,
+};
+
+// Define an event listener
+eventEmitter.on('calibrateAngels', () => {
+  dataHolder.isTocalibrateAngles = true;
 });
 
-const getVoltSignsCalibrations = () => voltSignsCalibrations;
-let pythonCodes = getLimbsPythonCodes();
+eventEmitter.on('calibrateVoltSign', () => {
+  dataHolder.voltSignsCalibrations = db.get('calibrationSigns');
+  console.log({ voltSignsCalibrations: dataHolder.voltSignsCalibrations });
+});
 
 eventEmitter.on('calibrateCustomAxis', () => {
-  pythonCodes = getLimbsPythonCodes();
+  dataHolder.pythonCodes = getLimbsPythonCodes();
 });
 
 const stoerdCalibrationVolts = db.get('calibrationVolts');
@@ -183,7 +185,7 @@ const handleArduinoData = (data, sideName) => {
   try {
     let parsedData = JSON.parse(data);
     let bonesVolts = {};
-    voltSignsCalibrations = getVoltSignsCalibrations();
+    const { voltSignsCalibrations } = dataHolder;
     const leftBonesVolts = {
       'mixamorig:LeftLeg.X':
         voltSignsCalibrations['mixamorig:LeftLeg.X'] * parsedData[0],
@@ -226,7 +228,7 @@ const handleArduinoData = (data, sideName) => {
     } else if (sideName == 'right') {
       bonesVolts = { ...rightBonesVolts };
     }
-    if (isTocalibrateAngles) {
+    if (dataHolder.isTocalibrateAngles) {
       calibrationVolts = { ...calibrationVolts, ...bonesVolts };
       storeCalibrationData();
     }
@@ -240,7 +242,7 @@ const handleArduinoData = (data, sideName) => {
 
 function storeCalibrationData() {
   setTimeout(() => {
-    isTocalibrateAngles = false;
+    dataHolder.isTocalibrateAngles = false;
     db.set('calibrationVolts', calibrationVolts);
   }, 100);
 }
