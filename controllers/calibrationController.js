@@ -32,9 +32,31 @@ const calibrateCustomAxis = (req, res) => {
   res.status(200).json({});
 };
 
+const getCalibratedCustomAxes = (req, res) => {
+  const customXAxisName = 'custom_x_axis_local';
+  const customZAxisName = 'custom_z_axis_local';
+
+  const customXAxisMappings = db.get(customXAxisName);
+  const customZAxisMappings = db.get(customZAxisName);
+  const bonesNames = Object.keys(customXAxisMappings);
+
+  const calibratedCustomAxes = {};
+  for (const boneName of bonesNames) {
+    const localBoneAxisForCustomXAxis = customXAxisMappings[boneName];
+    const localBoneAxisForCustomZAxis = customZAxisMappings[boneName];
+
+    calibratedCustomAxes[boneName] = {
+      [customXAxisName]: localBoneAxisForCustomXAxis,
+      [customZAxisName]: localBoneAxisForCustomZAxis,
+    };
+  }
+  res.status(200).json(calibratedCustomAxes);
+};
+
 module.exports = {
   getCalibratedVoltSign,
   calibrateVoltSign,
   calibrateAngels,
   calibrateCustomAxis,
+  getCalibratedCustomAxes,
 };

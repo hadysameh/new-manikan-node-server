@@ -20,6 +20,12 @@ const getCalibrateVoltSigns = async () => {
   return data;
 };
 
+const getCalibratedCustomAxes = async () => {
+  const { data } = await axios.get(
+    'http://localhost:3000/api/getcalibratecustomaxis'
+  );
+  return data;
+};
 const calibrateAngles = async () => {
   const res = await axios.post('http://localhost:3000/api/calibrateangels');
   return res;
@@ -28,6 +34,7 @@ const calibrateAngles = async () => {
 function App() {
   const [socketMessage, setSocketMessage] = useState();
   const [maxVolt, setMaxVolt] = useState(4.75);
+
   const { data: calibrationSigns, isLoading: isCalibrationSignsLoading } =
     useQuery({
       queryKey: ['getcalibratevoltsign'],
@@ -36,6 +43,16 @@ function App() {
     });
 
   const {
+    data: calibratedCustomAxes,
+    isLoading: isCalibratedCustomAxesLoading,
+  } = useQuery({
+    queryKey: ['getcalibratecustomaxis'],
+    queryFn: getCalibratedCustomAxes,
+    staleTime: Infinity,
+  });
+
+  // console.log({ calibratedCustomAxes });
+  const {
     mutate: mutateAnglesCalibration,
     isPending: isAnglesCalibrationPending,
     isSuccess: isAnglesCalibrated,
@@ -43,9 +60,6 @@ function App() {
     mutationFn: calibrateAngles,
   });
 
-  useEffect(() => {
-    getCalibrateVoltSigns();
-  }, []);
   useEffect(() => {
     // Listen for messages from the server
     socket.on('arduinoData', (message) => {
@@ -89,7 +103,7 @@ function App() {
       custom_x_axis_local: 'bone_x_axis',
       custom_z_axis_local: 'bone_z_axis',
     },
-    'mixamorig:LeftUpLeg ': {
+    'mixamorig:LeftUpLeg': {
       custom_x_axis_local: 'bone_x_axis',
       custom_z_axis_local: 'bone_z_axis',
     },
@@ -137,7 +151,11 @@ function App() {
         <div className="col-3">
           {Object.keys(bonesWithCustomAxesSchema).map((boneName) => (
             <>
-              {/* <BoneCustomAxesInput boneName={boneName} /> */}
+              <BoneCustomAxesInput
+                boneName={boneName}
+                calibratedCustomAxes={calibratedCustomAxes}
+                isCalibratedCustomAxesLoading={isCalibratedCustomAxesLoading}
+              />
               <hr />
             </>
           ))}
