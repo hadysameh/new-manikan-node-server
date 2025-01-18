@@ -6,7 +6,7 @@ const eventEmitter = require('../EventEmitter.js');
 const calibrateAngels = (req, res) => {
   // Emit the event
   eventEmitter.emit('calibrateAngels');
-  res.status.json({});
+  res.status(200).json({});
 };
 
 const calibrateVoltSign = (req, res) => {
@@ -29,7 +29,7 @@ const calibrateCustomAxis = (req, res) => {
   customAxisMapping[boneName] = localAxis;
   db.set(customAxis, customAxisMapping);
   eventEmitter.emit('calibrateCustomAxis');
-  res.status.json({});
+  res.status(200).json({});
 };
 
 module.exports = {

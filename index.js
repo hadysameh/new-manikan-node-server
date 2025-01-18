@@ -98,7 +98,6 @@ eventEmitter.on('calibrateAngels', () => {
 
 eventEmitter.on('calibrateVoltSign', () => {
   dataHolder.voltSignsCalibrations = db.get('calibrationSigns');
-  console.log({ voltSignsCalibrations: dataHolder.voltSignsCalibrations });
 });
 
 eventEmitter.on('calibrateCustomAxis', () => {

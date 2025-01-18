@@ -17,23 +17,32 @@ const getCalibrateVoltSigns = async () => {
   const { data } = await axios.get(
     'http://localhost:3000/api/getcalibratevoltsign'
   );
-  console.log({ data });
   return data;
+};
+
+const calibrateAngles = async () => {
+  const res = await axios.post('http://localhost:3000/api/calibrateangels');
+  return res;
 };
 
 function App() {
   const [socketMessage, setSocketMessage] = useState();
   const [maxVolt, setMaxVolt] = useState(4.75);
+  const { data: calibrationSigns, isLoading: isCalibrationSignsLoading } =
+    useQuery({
+      queryKey: ['getcalibratevoltsign'],
+      queryFn: getCalibrateVoltSigns,
+      staleTime: Infinity,
+    });
+
   const {
-    data: calibrationSigns,
-    isLoading: isCalibrationSignsLoading,
-    isError,
-  } = useQuery({
-    queryKey: ['getcalibratevoltsign'],
-    queryFn: getCalibrateVoltSigns,
-    // enabled: false,
-    staleTime: Infinity,
+    mutate: mutateAnglesCalibration,
+    isPending: isAnglesCalibrationPending,
+    isSuccess: isAnglesCalibrated,
+  } = useMutation({
+    mutationFn: calibrateAngles,
   });
+
   useEffect(() => {
     getCalibrateVoltSigns();
   }, []);
@@ -110,7 +119,18 @@ function App() {
               </div>
             ))}
             <div className="my-4">
-              <button className="btn btn-primary">Claibrate angles</button>
+              {isAnglesCalibrationPending ? (
+                <div className="spinner-border text-primary" role="status">
+                  {/* <span class="sr-only">Loading...</span> */}
+                </div>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => mutateAnglesCalibration()}
+                >
+                  calibrate angles
+                </button>
+              )}
             </div>
           </div>
         </div>

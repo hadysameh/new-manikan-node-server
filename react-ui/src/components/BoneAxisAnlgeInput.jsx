@@ -4,7 +4,6 @@ import axios from 'axios';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 const calibrateVoltSign = async ({ boneAxisName, voltSign }) => {
-  console.log({ boneAxisName, voltSign });
   const res = await axios.post('http://localhost:3000/api/calibratevoltsign', {
     boneAxisName,
     voltSign,
@@ -44,7 +43,7 @@ export default function BoneAxisAnlgeInput({
   useEffect(() => {
     if (socketMessage) {
       const boneAnlge = socketMessage[boneAxisName];
-      if (boneAnlge) {
+      if (boneAnlge !== undefined) {
         setbonAxisAngle(socketMessage[boneAxisName]);
         // console.log({ [boneAxisName]: socketMessage[boneAxisName] });
       }
