@@ -31,10 +31,7 @@ export default function BoneAxisAnlgeInput({
 
   useEffect(() => {
     if (calibrationSigns) {
-      console.log({
-        'calibrationSigns[boneAxisName]': calibrationSigns[boneAxisName],
-      });
-      setbonAxisAngle(calibrationSigns[boneAxisName]);
+      setVoltSign(calibrationSigns[boneAxisName]);
     }
   }, [calibrationSigns]);
 
