@@ -128,9 +128,12 @@ let calibrationVolts = {
 
 function calibrateBonesVoltages(voltagesObj) {
   const calibratedVoltages = {};
+  const { voltSignsCalibrations } = dataHolder;
+
   for (const boneName in voltagesObj) {
     const boneVolt = voltagesObj[boneName];
-    calibratedVoltages[boneName] = boneVolt - calibrationVolts[boneName];
+    calibratedVoltages[boneName] =
+      voltSignsCalibrations[boneName] * (boneVolt - calibrationVolts[boneName]);
   }
   return calibratedVoltages;
 }
@@ -184,42 +187,25 @@ const handleArduinoData = (data, sideName) => {
   try {
     let parsedData = JSON.parse(data);
     let bonesVolts = {};
-    const { voltSignsCalibrations } = dataHolder;
     const leftBonesVolts = {
-      'mixamorig:LeftLeg.X':
-        voltSignsCalibrations['mixamorig:LeftLeg.X'] * parsedData[0],
-      'mixamorig:LeftUpLeg.Z':
-        voltSignsCalibrations['mixamorig:LeftUpLeg.Z'] * parsedData[1],
-      'mixamorig:LeftUpLeg.Y':
-        voltSignsCalibrations['mixamorig:LeftUpLeg.Y'] * parsedData[2],
-      'mixamorig:LeftUpLeg.X':
-        voltSignsCalibrations['mixamorig:LeftUpLeg.X'] * parsedData[3],
-      'mixamorig:LeftArm.Z':
-        voltSignsCalibrations['mixamorig:LeftArm.Z'] * parsedData[4],
-      'mixamorig:LeftArm.Y':
-        voltSignsCalibrations['mixamorig:LeftArm.Y'] * parsedData[5],
-      'mixamorig:LeftArm.X':
-        voltSignsCalibrations['mixamorig:LeftArm.X'] * parsedData[6],
-      'mixamorig:LeftForeArm.Z':
-        voltSignsCalibrations['mixamorig:LeftForeArm.Z'] * parsedData[7],
+      'mixamorig:LeftLeg.X': parsedData[0],
+      'mixamorig:LeftUpLeg.Z': parsedData[1],
+      'mixamorig:LeftUpLeg.Y': parsedData[2],
+      'mixamorig:LeftUpLeg.X': parsedData[3],
+      'mixamorig:LeftArm.Z': parsedData[4],
+      'mixamorig:LeftArm.Y': parsedData[5],
+      'mixamorig:LeftArm.X': parsedData[6],
+      'mixamorig:LeftForeArm.Z': parsedData[7],
     };
     const rightBonesVolts = {
-      'mixamorig:RightUpLeg.X':
-        voltSignsCalibrations['mixamorig:RightUpLeg.X'] * parsedData[3],
-      'mixamorig:RightUpLeg.Y':
-        voltSignsCalibrations['mixamorig:RightUpLeg.Y'] * parsedData[2],
-      'mixamorig:RightUpLeg.Z':
-        voltSignsCalibrations['mixamorig:RightUpLeg.Z'] * parsedData[1],
-      'mixamorig:RightLeg.X':
-        voltSignsCalibrations['mixamorig:RightLeg.X'] * parsedData[0],
-      'mixamorig:RightForeArm.Z':
-        voltSignsCalibrations['mixamorig:RightForeArm.Z'] * parsedData[7],
-      'mixamorig:RightArm.Z':
-        voltSignsCalibrations['mixamorig:RightArm.Z'] * parsedData[6],
-      'mixamorig:RightArm.Y':
-        voltSignsCalibrations['mixamorig:RightArm.Y'] * parsedData[5],
-      'mixamorig:RightArm.X':
-        voltSignsCalibrations['mixamorig:RightArm.X'] * parsedData[4],
+      'mixamorig:RightUpLeg.X': parsedData[3],
+      'mixamorig:RightUpLeg.Y': parsedData[2],
+      'mixamorig:RightUpLeg.Z': parsedData[1],
+      'mixamorig:RightLeg.X': parsedData[0],
+      'mixamorig:RightForeArm.Z': parsedData[7],
+      'mixamorig:RightArm.Z': parsedData[6],
+      'mixamorig:RightArm.Y': parsedData[5],
+      'mixamorig:RightArm.X': parsedData[4],
     };
 
     if (sideName == 'left') {
