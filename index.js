@@ -192,20 +192,20 @@ const handleArduinoData = (data, sideName) => {
       'mixamorig:LeftUpLeg.Z': parsedData[1],
       'mixamorig:LeftUpLeg.Y': parsedData[2],
       'mixamorig:LeftUpLeg.X': parsedData[3],
-      'mixamorig:LeftArm.Z': parsedData[4],
+      'mixamorig:LeftArm.X': parsedData[4],
       'mixamorig:LeftArm.Y': parsedData[5],
-      'mixamorig:LeftArm.X': parsedData[6],
+      'mixamorig:LeftArm.Z': parsedData[6],
       'mixamorig:LeftForeArm.Z': parsedData[7],
     };
     const rightBonesVolts = {
-      'mixamorig:RightUpLeg.X': parsedData[3],
-      'mixamorig:RightUpLeg.Y': parsedData[2],
-      'mixamorig:RightUpLeg.Z': parsedData[1],
       'mixamorig:RightLeg.X': parsedData[0],
-      'mixamorig:RightForeArm.Z': parsedData[7],
-      'mixamorig:RightArm.Z': parsedData[6],
-      'mixamorig:RightArm.Y': parsedData[5],
+      'mixamorig:RightUpLeg.Z': parsedData[1],
+      'mixamorig:RightUpLeg.Y': parsedData[2],
+      'mixamorig:RightUpLeg.X': parsedData[3],
       'mixamorig:RightArm.X': parsedData[4],
+      'mixamorig:RightArm.Y': parsedData[5],
+      'mixamorig:RightArm.Z': parsedData[6],
+      'mixamorig:RightForeArm.Z': parsedData[7],
     };
 
     if (sideName == 'left') {
