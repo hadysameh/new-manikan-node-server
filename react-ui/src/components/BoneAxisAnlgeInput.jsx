@@ -1,35 +1,55 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 const calibrateVoltSign = async ({ boneAxisName, voltSign }) => {
-  const res = await axios.post('http://localhost:3000/calibrateVoltSign', {
+  console.log({ boneAxisName, voltSign });
+  const res = await axios.post('http://localhost:3000/api/calibratevoltsign', {
     boneAxisName,
     voltSign,
   });
   return res;
 };
 
-export default function BoneAxisAnlgeInput({ boneAxisName, socketMessage }) {
-  const { mutateAsync, isPending, isSuccess } = useMutation({
+export default function BoneAxisAnlgeInput({
+  boneAxisName,
+  socketMessage,
+  calibrationSigns,
+  isCalibrationSignsLoading,
+}) {
+  const {
+    mutate: mutateVoltSign,
+    isPending,
+    isSuccess: isVoltSignsMutated,
+  } = useMutation({
     mutationFn: calibrateVoltSign,
   });
+
   const [bonAxisAngle, setbonAxisAngle] = useState();
-  const [boneVoltCalibrationSign, setboneVoltCalibrationSign] = useState(1);
+  const [voltSign, setVoltSign] = useState(1);
 
   useEffect(() => {
-    if (isSuccess) {
-      setboneVoltCalibrationSign((prev) => -1 * prev);
+    if (calibrationSigns) {
+      console.log({
+        'calibrationSigns[boneAxisName]': calibrationSigns[boneAxisName],
+      });
+      setbonAxisAngle(calibrationSigns[boneAxisName]);
     }
-  }, [isSuccess]);
+  }, [calibrationSigns]);
+
+  useEffect(() => {
+    if (isVoltSignsMutated) {
+      setVoltSign((prev) => -1 * prev);
+    }
+  }, [isVoltSignsMutated]);
 
   useEffect(() => {
     if (socketMessage) {
       const boneAnlge = socketMessage[boneAxisName];
       if (boneAnlge) {
         setbonAxisAngle(socketMessage[boneAxisName]);
-        console.log({ [boneAxisName]: socketMessage[boneAxisName] });
+        // console.log({ [boneAxisName]: socketMessage[boneAxisName] });
       }
     }
   }, [socketMessage]);
@@ -39,8 +59,8 @@ export default function BoneAxisAnlgeInput({ boneAxisName, socketMessage }) {
       <p className="text-center"> {boneAxisName}</p>
 
       <div className="d-flex gap-2">
-        {isPending ? (
-          <div class="spinner-border text-primary" role="status">
+        {isPending || isCalibrationSignsLoading ? (
+          <div className="spinner-border text-primary" role="status">
             {/* <span class="sr-only">Loading...</span> */}
           </div>
         ) : (
@@ -48,10 +68,10 @@ export default function BoneAxisAnlgeInput({ boneAxisName, socketMessage }) {
             <button
               className="btn btn-primary"
               onClick={() =>
-                mutateAsync({ boneAxisName, boneVoltCalibrationSign })
+                mutateVoltSign({ boneAxisName, voltSign: -1 * voltSign })
               }
             >
-              {boneVoltCalibrationSign > 0 ? '+' : '-'}
+              {voltSign > 0 ? '+' : '-'}
             </button>
           </div>
         )}

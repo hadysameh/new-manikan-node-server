@@ -11,11 +11,32 @@ import socket from './socket';
 import BoneAnlgeInput from './components/BoneAxisAnlgeInput';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BoneCustomAxesInput } from './components/BoneCustomAxesInput';
+import axios from 'axios';
 
-const queryClient = new QueryClient();
+const getCalibrateVoltSigns = async () => {
+  const { data } = await axios.get(
+    'http://localhost:3000/api/getcalibratevoltsign'
+  );
+  console.log({ data });
+  return data;
+};
+
 function App() {
   const [socketMessage, setSocketMessage] = useState();
-
+  const [maxVolt, setMaxVolt] = useState(4.75);
+  const {
+    data: calibrationSigns,
+    isLoading: isCalibrationSignsLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['getcalibratevoltsign'],
+    queryFn: getCalibrateVoltSigns,
+    // enabled: false,
+    staleTime: Infinity,
+  });
+  useEffect(() => {
+    getCalibrateVoltSigns();
+  }, []);
   useEffect(() => {
     // Listen for messages from the server
     socket.on('arduinoData', (message) => {
@@ -28,6 +49,7 @@ function App() {
       socket.off('arduinoData');
     };
   }, []);
+
   const bonesAxesNames = [
     'mixamorig:LeftUpLeg.X',
     'mixamorig:LeftUpLeg.Y',
@@ -68,48 +90,8 @@ function App() {
     },
   };
 
-  const [maxVolt, setMaxVolt] = useState(4.75);
-
-  // const [bonesAxesCalibrationData, setBonesAxesCalibrationData] = useState({
-  //   ...bonesAxesCalibrationDataSchema,
-  // });
-
-  // const [bonesWithCustomAxesData, setBonesWithCustomAxesData] = useState({
-  //   ...bonesWithCustomAxesSchema,
-  // });
-
-  // const setBoneAxisangle = (boneAxisName, angle) => {
-  //   setBonesAxesCalibrationData((prev) => {
-  //     const newStat = { ...prev };
-  //     newStat[boneAxisName] = { ...newStat[boneAxisName], angle };
-  //     return newStat;
-  //   });
-  // };
-
-  // const setIsBoneAxisVoltPositive = (boneAxisName, isPositiveSign) => {
-  //   setBonesAxesCalibrationData((prev) => {
-  //     const newStat = { ...prev };
-  //     newStat[boneAxisName] = { ...newStat[boneAxisName], isPositiveSign };
-  //     return newStat;
-  //   });
-  // };
-
-  // const setCustomAndLocalAxesRelation = (
-  //   boneName,
-  //   customAxisName,
-  //   localAxisName
-  // ) => {
-  //   setBonesWithCustomAxesData((prev) => {
-  //     const newStat = { ...prev };
-  //     newStat[boneName] = {
-  //       ...newStat[boneName],
-  //       [customAxisName]: localAxisName,
-  //     };
-  //     return newStat;
-  //   });
-  // };
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <div className="d-flex w-25">
         <p className="w-50">max volt:</p>
         <input type="text" className="form-control" value={maxVolt} />
@@ -122,6 +104,8 @@ function App() {
                 <BoneAnlgeInput
                   boneAxisName={boneAxisName}
                   socketMessage={socketMessage}
+                  calibrationSigns={calibrationSigns}
+                  isCalibrationSignsLoading={isCalibrationSignsLoading}
                 />
               </div>
             ))}
@@ -139,7 +123,7 @@ function App() {
           ))}
         </div>
       </div>
-    </QueryClientProvider>
+    </>
   );
 }
 

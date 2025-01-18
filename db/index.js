@@ -18,13 +18,14 @@ const get = (key) => {
 const set = (key, value) => {
   let db = getDbJson();
   db[key] = value;
-  fs.writeFileSync('./store.json', JSON.stringify(db));
+  console.log({ ' db[key]': db[key] });
+  fs.writeFileSync(__dirname + '/store.json', JSON.stringify(db));
 };
 
 const remove = (key) => {
   let db = getDbJson();
   delete db[key];
-  fs.writeFileSync('./store.json', JSON.stringify(db));
+  fs.writeFileSync(__dirname + '/store.json', JSON.stringify(db));
 };
 
 module.exports = { get, set, remove };

@@ -8,6 +8,7 @@ const EventEmitter = require('events');
 const fs = require('fs');
 const calibrationRouter = require('./routes/calibrationRouter.js');
 const db = require('./db/index');
+const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
@@ -95,6 +96,7 @@ eventEmitter.on('calibrateVoltSign', () => {
   voltSignsCalibrations = db.get('calibrationSigns');
 });
 
+const getVoltSignsCalibrations = () => voltSignsCalibrations;
 let pythonCodes = getLimbsPythonCodes();
 
 eventEmitter.on('calibrateCustomAxis', () => {
@@ -142,6 +144,20 @@ function getBonesAngles(calibratedBonesVolts) {
   }
   return bonesAngles;
 }
+app.use(
+  cors({
+    origin: ['http://localhost:5173'],
+    credentials: true,
+  })
+);
+
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10kb' }));
+
+app.use('/*', (req, res, next) => {
+  console.log(req.originalUrl);
+  next();
+});
 
 app.use('/api', calibrationRouter);
 
@@ -167,6 +183,7 @@ const handleArduinoData = (data, sideName) => {
   try {
     let parsedData = JSON.parse(data);
     let bonesVolts = {};
+    voltSignsCalibrations = getVoltSignsCalibrations();
     const leftBonesVolts = {
       'mixamorig:LeftLeg.X':
         voltSignsCalibrations['mixamorig:LeftLeg.X'] * parsedData[0],

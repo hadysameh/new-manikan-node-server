@@ -14,6 +14,12 @@ const calibrateVoltSign = (req, res) => {
   const { boneAxisName, voltSign } = req.body;
   const calibratedVoltSigns = db.get('calibrationSigns');
   calibratedVoltSigns[boneAxisName] = voltSign;
+  // console.log({
+  //   boneAxisName,
+  //   voltSign,
+  //   'calibratedVoltSigns[boneAxisName]': calibratedVoltSigns[boneAxisName],
+  //   calibratedVoltSigns,
+  // });
   db.set('calibrationSigns', calibratedVoltSigns);
   eventEmitter.emit('calibrateVoltSign');
   res.status(200).json({});
@@ -21,7 +27,7 @@ const calibrateVoltSign = (req, res) => {
 
 const getCalibratedVoltSign = (req, res) => {
   const calibratedVoltSigns = db.get('calibrationSigns');
-  res.status(200).json({ calibratedVoltSigns });
+  res.status(200).json(calibratedVoltSigns);
 };
 
 const calibrateCustomAxis = (req, res) => {
