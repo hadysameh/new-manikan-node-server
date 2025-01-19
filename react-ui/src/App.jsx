@@ -62,8 +62,6 @@ function App() {
   useEffect(() => {
     // Listen for messages from the server
     socket.on('arduinoData', (message) => {
-      console.log(message);
-
       setSocketMessage(message);
     });
 
