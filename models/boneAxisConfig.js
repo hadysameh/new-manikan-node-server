@@ -53,7 +53,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'boneAxisConfig',
+      modelName: 'BoneAxisConfig',
       tableName: 'boneAxisConfig',
       timestamps: true,
     }
