@@ -1,7 +1,7 @@
 'use strict';
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class BoneAxesCustomAxesCalibrationVolt extends Model {
+  class boneAxisConfig extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -9,18 +9,18 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      BoneAxesCustomAxesCalibrationVolt.belongsTo(models.Bone, {
+      boneAxisConfig.belongsTo(models.Bone, {
         foreignKey: 'boneId',
       });
-      BoneAxesCustomAxesCalibrationVolt.belongsTo(models.Axis, {
+      boneAxisConfig.belongsTo(models.Axis, {
         foreignKey: 'axisId',
       });
-      BoneAxesCustomAxesCalibrationVolt.belongsTo(models.CustomAxis, {
+      boneAxisConfig.belongsTo(models.CustomAxis, {
         foreignKey: 'customAxisId',
       });
     }
   }
-  BoneAxesCustomAxesCalibrationVolt.init(
+  boneAxisConfig.init(
     {
       boneId: {
         // Foreign key to the User model
@@ -53,10 +53,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'BoneAxesCustomAxesCalibrationVolt',
-      tableName: 'BoneAxesCustomAxesCalibrationVolt',
+      modelName: 'boneAxisConfig',
+      tableName: 'boneAxisConfig',
       timestamps: true,
     }
   );
-  return BoneAxesCustomAxesCalibrationVolt;
+  return boneAxisConfig;
 };

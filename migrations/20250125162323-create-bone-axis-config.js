@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('BoneAxesCustomAxesCalibrationVolt', {
+    await queryInterface.createTable('boneAxisConfig', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -53,14 +53,14 @@ module.exports = {
     });
 
     // Add a unique constraint to prevent duplicate associations
-    await queryInterface.addConstraint('BoneAxesCustomAxesCalibrationVolt', {
+    await queryInterface.addConstraint('boneAxisConfig', {
       fields: ['boneId', 'axisId', 'customAxisId'],
       type: 'unique',
-      name: 'unique_bone_axis_cutomAxis',
+      name: 'unique_bone_axis_config',
     });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('BoneAxesCustomAxesCalibrationVolt');
+    await queryInterface.dropTable('boneAxisConfig');
   },
 };

@@ -1,7 +1,7 @@
 const db = require('../db/index');
 
 // Create an instance of EventEmitter
-const eventEmitter = require('../EventEmitter.js');
+const eventEmitter = require('../utils/EventEmitter.js');
 
 const calibrateAngels = (req, res) => {
   // Emit the event

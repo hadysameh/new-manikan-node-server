@@ -10,11 +10,11 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       CustomAxis.belongsToMany(models.Bone, {
-        through: models.BoneAxesCustomAxesCalibrationVolt, // Join table
+        through: models.BoneAxisConfig, // Join table
         foreignKey: 'customAxisId', // Foreign key in the join table referencing Project
       });
       CustomAxis.belongsToMany(models.Axis, {
-        through: models.BoneAxesCustomAxesCalibrationVolt, // Join table
+        through: models.BoneAxisConfig, // Join table
         foreignKey: 'customAxisId', // Foreign key in the join table referencing Project
       });
     }
