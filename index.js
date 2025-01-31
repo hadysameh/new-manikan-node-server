@@ -177,6 +177,40 @@ app.get('/ui', (req, res) => {
   res.sendFile(path.resolve(__dirname, './ui/index.html'));
 });
 
+const mapArduinoData = (arduinoObject) => {
+  const dataObject = {
+    'armatureName.info': 'Armature.001',
+    'leftArmBoneName.info': 'Ctrl_Arm_FK_Left',
+    'rightArmBoneName.info': 'Ctrl_Arm_FK_Right',
+    'leftUpLegBoneName.info': 'Ctrl_UpLeg_FK_Left',
+    'rightUpLegBoneName.info': 'Ctrl_UpLeg_FK_Right',
+    'leftForeArmName.info': 'Ctrl_ForeArm_FK_Left',
+    'rightForeArmName.info': 'Ctrl_ForeArm_FK_Right',
+    'leftLegBoneName.info': 'Ctrl_Leg_FK_Left',
+    'rightLegBoneName.info': 'Ctrl_Leg_FK_Right',
+  };
+
+  const mappingObject = {
+    'mixamorig:LeftArm': dataObject.leftArmBoneName,
+    'mixamorig:LeftForeArm': dataObject.rightForeArmName,
+    'mixamorig:LeftUpLeg': dataObject.leftUpLegBoneName,
+    'mixamorig:LeftLeg': dataObject.leftLegBoneName,
+    'mixamorig:RightArm': dataObject.rightArmBoneName,
+    'mixamorig:RightForeArm': dataObject.rightForeArmName,
+    'mixamorig:RightUpLeg': dataObject.rightUpLegBoneName,
+    'mixamorig:RightLeg': dataObject.rightLegBoneName,
+  };
+
+  const mappedData = { ...dataObject };
+
+  for (const boneNameAndAxis in arduinoObject) {
+    const [boneName, axis] = boneNameAndAxis.split('.');
+    const mappedBoneName = mappingObject[boneName];
+    mappedData[mappedBoneName + '.' + axis] = arduinoObject[boneNameAndAxis];
+  }
+  return mappedData;
+};
+
 const recievedData = [];
 /**
  *
@@ -184,6 +218,15 @@ const recievedData = [];
  * @param {string} sideName
  */
 const handleArduinoData = (data, sideName) => {
+  let isValidJsonData = false;
+  try {
+    JSON.parse(data);
+    isValidJsonData = true;
+  } catch (error) {}
+
+  if (!isValidJsonData) {
+    return;
+  }
   try {
     let parsedData = JSON.parse(data);
     let bonesVolts = {};
@@ -219,7 +262,12 @@ const handleArduinoData = (data, sideName) => {
     }
     const calibratedBonesVolts = calibrateBonesVoltages(bonesVolts);
     let bonesAngles = getBonesAngles(calibratedBonesVolts);
-    bonesAngles = { ...bonesAngles, ...dataHolder.pythonCodes };
+    const mappedBonesData = mapArduinoData(bonesAngles);
+    bonesAngles = {
+      ...bonesAngles,
+      ...dataHolder.pythonCodes,
+      ...mappedBonesData,
+    };
     // console.log({ bonesAngles });
     io.emit('arduinoData', bonesAngles);
   } catch (ok) {}
