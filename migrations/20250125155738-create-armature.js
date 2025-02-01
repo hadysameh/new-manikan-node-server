@@ -25,7 +25,7 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex('isActive', ['isActive'], {
+    await queryInterface.addIndex('Armatures', ['isActive'], {
       name: 'armatures_isActive_index', // Optional: Custom index name
     });
   },
