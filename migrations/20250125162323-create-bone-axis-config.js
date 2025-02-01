@@ -39,8 +39,10 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      calibrationVolt: {
-        type: Sequelize.INTEGER,
+
+      data: {
+        type: Sequelize.JSON, // Use Sequelize.JSONB for PostgreSQL
+        allowNull: true, // Set to false if the field is required
       },
       createdAt: {
         allowNull: false,

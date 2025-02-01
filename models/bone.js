@@ -22,6 +22,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   Bone.init(
     {
+      bodyBoneName: DataTypes.STRING,
+      armatureBoneName: DataTypes.STRING,
       name: DataTypes.STRING,
       armatureId: {
         // Foreign key to the User model

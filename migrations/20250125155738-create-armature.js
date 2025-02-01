@@ -24,6 +24,10 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
+
+    await queryInterface.addIndex('isActive', ['isActive'], {
+      name: 'armatures_isActive_index', // Optional: Custom index name
+    });
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Armatures');

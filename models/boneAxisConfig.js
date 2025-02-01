@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
           key: 'id', // Primary key of the referenced table
         },
       },
-      calibrationVolt: DataTypes.INTEGER,
+      data: DataTypes.JSON,
     },
     {
       sequelize,

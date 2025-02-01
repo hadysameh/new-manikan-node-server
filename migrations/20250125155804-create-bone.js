@@ -9,7 +9,10 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      name: {
+      bodyBoneName: {
+        type: Sequelize.STRING,
+      },
+      armatureBoneName: {
         type: Sequelize.STRING,
       },
       armatureId: {
