@@ -28,6 +28,10 @@ module.exports = {
     await queryInterface.addIndex('Armatures', ['isActive'], {
       name: 'armatures_isActive_index', // Optional: Custom index name
     });
+
+    await queryInterface.addIndex('Armatures', ['name'], {
+      name: 'armatures_name_index', // Optional: Custom index name
+    });
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Armatures');

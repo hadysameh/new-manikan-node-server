@@ -1,7 +1,7 @@
 'use strict';
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class boneAxisConfig extends Model {
+  class BoneAxisConfig extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -9,18 +9,18 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      boneAxisConfig.belongsTo(models.Bone, {
+      BoneAxisConfig.belongsTo(models.Bone, {
         foreignKey: 'boneId',
       });
-      boneAxisConfig.belongsTo(models.Axis, {
+      BoneAxisConfig.belongsTo(models.Axis, {
         foreignKey: 'axisId',
       });
-      boneAxisConfig.belongsTo(models.CustomAxis, {
+      BoneAxisConfig.belongsTo(models.CustomAxis, {
         foreignKey: 'customAxisId',
       });
     }
   }
-  boneAxisConfig.init(
+  BoneAxisConfig.init(
     {
       boneId: {
         // Foreign key to the User model
@@ -58,5 +58,5 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     }
   );
-  return boneAxisConfig;
+  return BoneAxisConfig;
 };

@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Armature.hasMany(models.Bone, { foreignKey: 'armatureId' });
     }
   }
   Armature.init(

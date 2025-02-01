@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         through: models.BoneAxisConfig, // Join table
         foreignKey: 'customAxisId', // Foreign key in the join table referencing Project
       });
+
       CustomAxis.belongsToMany(models.Axis, {
         through: models.BoneAxisConfig, // Join table
         foreignKey: 'customAxisId', // Foreign key in the join table referencing Project
