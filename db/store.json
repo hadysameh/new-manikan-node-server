@@ -34,8 +34,8 @@
         "mixamorig:RightUpLeg.Z": -1,
         "mixamorig:RightLeg.Z": 1,
         "mixamorig:RightForeArm.Z": -1,
-        "mixamorig:RightArm.Y": -1,
         "mixamorig:RightArm.X": 1,
+        "mixamorig:RightArm.Y": -1,
         "mixamorig:RightArm.Z": -1,
         "mixamorig:LeftLeg.X": 1,
         "mixamorig:RightLeg.X": 1

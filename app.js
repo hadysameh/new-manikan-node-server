@@ -1,12 +1,8 @@
 'use strict';
 const path = require('path');
-const { SerialPort, ReadlineParser } = require('serialport');
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
 const calibrationRouter = require('./routes/calibrationRouter.js');
-const db = require('./db/index');
-const eventEmitter = require('./utils/EventEmitter.js');
 const globalErrorHandler = require('./utils/globalErrorHandler.js');
 const armatureRouter = require('./routes/armatureRouter.js');
 const boneAxisConfigRouter = require('./routes/boneAxisConfigRouter.js');

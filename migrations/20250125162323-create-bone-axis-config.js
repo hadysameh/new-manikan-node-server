@@ -31,7 +31,7 @@ module.exports = {
       },
       customAxisId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+
         references: {
           model: 'CustomAxes',
           key: 'id',
@@ -45,11 +45,9 @@ module.exports = {
         allowNull: true, // Set to false if the field is required
       },
       createdAt: {
-        allowNull: false,
         type: Sequelize.DATE,
       },
       updatedAt: {
-        allowNull: false,
         type: Sequelize.DATE,
       },
     });
