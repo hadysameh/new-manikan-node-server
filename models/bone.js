@@ -18,6 +18,10 @@ module.exports = (sequelize, DataTypes) => {
         through: models.BoneAxisConfig, // Join table
         foreignKey: 'boneId', // Foreign key in the join table referencing Project
       });
+
+      Bone.hasMany(models.BoneAxisConfig, {
+        foreignKey: 'boneId', // Foreign key in the join table referencing Project
+      });
     }
   }
   Bone.init(
