@@ -15,83 +15,57 @@ const dataHolder = {
 };
 
 const populateConfigDataHolder = async () => {
-  const armatureData = await db.Armature.findOne({
-    attributes: ['name'],
-    where: { isActive: true },
+  const result = await db.BoneAxisConfig.findAll({
     include: [
       {
         model: db.Bone,
-        attributes: ['bodyBoneName', 'armatureBoneName'],
         include: [
           {
-            model: db.CustomAxis,
+            model: db.Armature,
             attributes: ['name'],
 
-            through: { attributes: ['axisId', 'customAxisId', 'data'] },
-          },
-          {
-            model: db.Axis,
-            attributes: ['name'],
-
-            through: { attributes: ['axisId', 'customAxisId', 'data'] },
+            where: { isActive: true },
           },
         ],
       },
       {
-        model: db.BoneAxisConfig,
+        model: db.Axis,
+        attributes: [],
+      },
+      {
+        model: db.CustomAxis,
+        attributes: [],
       },
     ],
+    attributes: [
+      // 'id', // Include Post fields you want
+      'data',
+      [db.sequelize.col(`Bone.bodyBoneName`), 'bodyBoneName'],
+      [db.sequelize.col('Bone.armatureBoneName'), 'armatureBoneName'],
+      [db.sequelize.col('Axis.name'), 'axisName'],
+      [db.sequelize.col('CustomAxis.name'), 'customAxisName'],
+    ],
   });
-
-  const config = await db.Config.findOne({});
-  dataHolder.armatureName = armatureData.name;
-  const { Bones } = armatureData;
-
-  Bones.forEach((bone) => {
-    console.log({ bone: JSON.stringify(bone) });
-    dataHolder[bone.bodyBoneName] = {
-      armatureBoneName: bone.armatureBoneName,
+  const mappedResult = result.map((row) => {
+    const { dataValues } = row;
+    const { dataValues: boneDataValues } = row.Bone;
+    return {
+      armatureName: row.Bone.Armature.name,
+      armatureBoneNameWithAxis:
+        dataValues.armatureBoneName + '.' + dataValues.axisName,
+      bodyBoneNameWithAxis: dataValues.bodyBoneName + '.' + dataValues.axisName,
+      calibrationVolt: JSON.parse(dataValues.data).calibrationVolt,
+      voltSign: JSON.parse(dataValues.data).voltSign,
     };
-    const { CustomAxes, Axes } = bone;
-    for (let index = 0; index < CustomAxes.length; index++) {
-      const customAxis = CustomAxes[index];
-      const axis = Axes[index];
-      const customAxisName = customAxis.name;
-      const axisName = axis.name;
-      dataHolder[bone.bodyBoneName][customAxisName] = axisName;
-
-      const boneJsonData = axis?.BoneAxisConfig?.data
-        ? JSON.parse(axis?.BoneAxisConfig?.data)
-        : null;
-      if (!boneJsonData) {
-        continue;
-      }
-      dataHolder[bone.bodyBoneName].voltSign = boneJsonData.voltSign;
-      dataHolder[bone.bodyBoneName].calibrationVolt =
-        boneJsonData.calibrationVolt;
-    }
   });
+  console.log({
+    mappedResult,
+    // result,
+  });
+  const config = await db.Config.findOne({});
   dataHolder.maxVolt = Number(config.maxVolt);
   dataHolder.maxAnlge = Number(config.maxAnlge);
 };
-
-// custom_x_axis_local: 1
-// custom_z_axis_local: 2
-// custom_y_axis_local: 3;
-// ===============
-
-// x:1
-// y:2
-// z:3;
-// =============
-// LeftUpLeg:3
-// LeftLeg:4
-// LeftForeArm:7
-// LeftArm:8
-// RightUpLeg:11
-// RightLeg: 12
-// RightForeArm:15
-// RightArm: 16
 
 populateConfigDataHolder().then(() => console.log({ dataHolder }));
 module.exports = {
