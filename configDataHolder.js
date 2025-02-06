@@ -1,17 +1,8 @@
 const db = require('./models');
-
-const dataHolder = {
+const { groupBy } = require('lodash');
+const fs = require('fs');
+let dataHolder = {
   armatureName: '',
-
-  LeftUpLeg: {},
-  LeftLeg: {},
-  LeftForeArm: {},
-  LeftArm: {},
-
-  RightUpLeg: {},
-  RightLeg: {},
-  RightForeArm: {},
-  RightArm: {},
 };
 
 const populateConfigDataHolder = async () => {
@@ -46,28 +37,78 @@ const populateConfigDataHolder = async () => {
       [db.sequelize.col('CustomAxis.name'), 'customAxisName'],
     ],
   });
+
   const mappedResult = result.map((row) => {
     const { dataValues } = row;
-    const { dataValues: boneDataValues } = row.Bone;
     return {
-      armatureName: row.Bone.Armature.name,
-      armatureBoneNameWithAxis:
-        dataValues.armatureBoneName + '.' + dataValues.axisName,
-      bodyBoneNameWithAxis: dataValues.bodyBoneName + '.' + dataValues.axisName,
+      // armatureName: row.Bone.Armature.name,
+      armatureBoneName: dataValues.armatureBoneName,
+      bodyBoneName: dataValues.bodyBoneName,
+      axisName: dataValues.axisName,
+      customAxisName: dataValues.customAxisName,
       calibrationVolt: JSON.parse(dataValues.data).calibrationVolt,
       voltSign: JSON.parse(dataValues.data).voltSign,
     };
   });
-  console.log({
-    mappedResult,
-    // result,
-  });
+
+  const boneGrouppedResults = groupBy(mappedResult, 'bodyBoneName');
+
   const config = await db.Config.findOne({});
+
+  dataHolder.armatureName = result[0].Bone.Armature.name;
   dataHolder.maxVolt = Number(config.maxVolt);
   dataHolder.maxAnlge = Number(config.maxAnlge);
+  dataHolder = { ...dataHolder, ...boneGrouppedResults };
+
+  let calibrationVolts = {};
+  let bonesAxesVoltsSigns = {};
+  let bonesCustomAxesMappings = {};
+
+  for (const propName in dataHolder) {
+    const isBoneName = Array.isArray(dataHolder[propName]);
+    if (!isBoneName) continue;
+    const boneAxesData = dataHolder[propName];
+    const boneAxesCalibrationVolts = {};
+    const boneAxesVoltsSigns = {};
+    const boneCustomAxesMappings = {};
+
+    boneAxesData.forEach((boneAxisData) => {
+      const bodyBoneNameWithAxis = `${boneAxisData.bodyBoneName}.${boneAxisData.axisName}`;
+      boneAxesCalibrationVolts[bodyBoneNameWithAxis] =
+        boneAxisData.calibrationVolt;
+
+      boneAxesVoltsSigns[bodyBoneNameWithAxis] = boneAxisData.voltSign;
+
+      calibrationVolts = { ...calibrationVolts, ...boneAxesCalibrationVolts };
+      bonesAxesVoltsSigns = { ...bonesAxesVoltsSigns, ...boneAxesVoltsSigns };
+      const { customAxisName } = boneAxisData;
+
+      if (customAxisName) {
+        boneCustomAxesMappings[bodyBoneNameWithAxis] = customAxisName;
+      }
+      bonesCustomAxesMappings = {
+        ...bonesCustomAxesMappings,
+        ...boneCustomAxesMappings,
+      };
+    });
+  }
+  dataHolder = {
+    ...dataHolder,
+    calibrationVolts,
+    bonesAxesVoltsSigns,
+    bonesCustomAxesMappings,
+  };
+  fs.writeFileSync('./test.js', JSON.stringify(dataHolder));
+
+  // console.log({
+  //   calibrationVolts,
+  //   bonesAxesVoltsSigns,
+  //   bonesCustomAxesMappings,
+  // });
 };
 
 populateConfigDataHolder().then(() => console.log({ dataHolder }));
+
 module.exports = {
   dataHolder,
   populateConfigDataHolder,

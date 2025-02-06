@@ -5,13 +5,6 @@ const dataHolder = require('./dataHolder');
 
 const LEFT_PORT = 10;
 const RIGHT_PORT = 9;
-const MAX_VOLT = 4.75;
-const MAX_ANGLE = 275;
-const recievedData = [];
-
-let recievedBonesVolts = {};
-
-const stoerdCalibrationVolts = db.get('calibrationVolts');
 
 let calibrationVolts = {
   'LeftUpLeg.X': 0,
@@ -95,50 +88,54 @@ const handleArduinoData = (data, sideName) => {
   } catch (ok) {}
 };
 
-try {
-  const leftPortName = 'COM' + LEFT_PORT;
-  const rightPortName = 'COM' + RIGHT_PORT;
+const emitArduinoDataToClients = () => {
+  try {
+    const leftPortName = 'COM' + LEFT_PORT;
+    const rightPortName = 'COM' + RIGHT_PORT;
 
-  const leftPort = new SerialPort({
-    path: leftPortName,
-    baudRate: 9600,
-    autoOpen: false, // Do not auto-open to handle errors properly
-  });
+    const leftPort = new SerialPort({
+      path: leftPortName,
+      baudRate: 9600,
+      autoOpen: false, // Do not auto-open to handle errors properly
+    });
 
-  const rightPort = new SerialPort({
-    path: rightPortName,
-    baudRate: 9600,
-    autoOpen: false, // Do not auto-open to handle errors properly
-  });
-  // Handle connection errors
-  leftPort.open((err) => {
-    if (err) {
-      console.warn(`Failed to open port ${leftPortName}:`, err.message);
-      return;
-    }
-    console.log(`Port ${leftPortName} opened successfully.`);
-  });
+    const rightPort = new SerialPort({
+      path: rightPortName,
+      baudRate: 9600,
+      autoOpen: false, // Do not auto-open to handle errors properly
+    });
+    // Handle connection errors
+    leftPort.open((err) => {
+      if (err) {
+        console.warn(`Failed to open port ${leftPortName}:`, err.message);
+        return;
+      }
+      console.log(`Port ${leftPortName} opened successfully.`);
+    });
 
-  rightPort.open((err) => {
-    if (err) {
-      console.warn(`Failed to open port ${leftPortName}:`, err.message);
-      return;
-    }
-    console.log(`Port ${rightPortName} opened successfully.`);
-  });
+    rightPort.open((err) => {
+      if (err) {
+        console.warn(`Failed to open port ${leftPortName}:`, err.message);
+        return;
+      }
+      console.log(`Port ${rightPortName} opened successfully.`);
+    });
 
-  // Handle general errors
-  leftPort.on('error', (err) => {
-    console.error(`Serial port error: ${err.message}`);
-  });
+    // Handle general errors
+    leftPort.on('error', (err) => {
+      console.error(`Serial port error: ${err.message}`);
+    });
 
-  rightPort.on('error', (err) => {
-    console.error(`Serial port error: ${err.message}`);
-  });
+    rightPort.on('error', (err) => {
+      console.error(`Serial port error: ${err.message}`);
+    });
 
-  leftPort.pipe(leftParser);
-  rightPort.pipe(rightParser);
+    leftPort.pipe(leftParser);
+    rightPort.pipe(rightParser);
 
-  leftParser.on('data', (data) => handleArduinoData(data, 'left'));
-  rightParser.on('data', (data) => handleArduinoData(data, 'right'));
-} catch (error) {}
+    leftParser.on('data', (data) => handleArduinoData(data, 'left'));
+    rightParser.on('data', (data) => handleArduinoData(data, 'right'));
+  } catch (error) {}
+};
+
+module.exports = emitArduinoDataToClients;
