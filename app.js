@@ -6,6 +6,7 @@ const calibrationRouter = require('./routes/calibrationRouter.js');
 const globalErrorHandler = require('./utils/globalErrorHandler.js');
 const armatureRouter = require('./routes/armatureRouter.js');
 const boneAxisConfigRouter = require('./routes/boneAxisConfigRouter.js');
+const emitArduinoDataToClients = require('./arduinoHandler.js');
 
 const app = express();
 
@@ -38,5 +39,5 @@ app.get('/*', (req, res) => {
 });
 
 app.use(globalErrorHandler);
-
+emitArduinoDataToClients();
 module.exports = app;

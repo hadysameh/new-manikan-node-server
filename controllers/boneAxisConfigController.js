@@ -25,7 +25,7 @@ const update = catchAsync(async (req, res, next) => {
     whereCondition = { boneId, axisId, customAxisId };
   }
 
-  const armatures = await db.Armature.update(
+  await db.Armature.update(
     { boneId, axisId, customAxisId, calibrationVolt },
     { where: whereCondition }
   );
@@ -34,7 +34,7 @@ const update = catchAsync(async (req, res, next) => {
 
 const remove = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const armatures = await db.Armature.destroy({
+  await db.Armature.destroy({
     where: { id },
   });
   standardResponse.deleted(res);
@@ -42,7 +42,7 @@ const remove = catchAsync(async (req, res, next) => {
 
 const create = catchAsync(async (req, res, next) => {
   const { boneId, axisId, customAxisId, calibrationVolt } = req.body;
-  const armatures = await db.Armature.create({
+  await db.Armature.create({
     boneId,
     axisId,
     customAxisId,

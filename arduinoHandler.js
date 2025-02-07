@@ -1,41 +1,46 @@
 'use strict';
 const path = require('path');
 const { SerialPort, ReadlineParser } = require('serialport');
-const dataHolder = require('./dataHolder');
+const { dataHolder, populateConfigDataHolder } = require('./configDataHolder');
 
 const LEFT_PORT = 10;
 const RIGHT_PORT = 9;
 
-let calibrationVolts = {
-  'LeftUpLeg.X': 0,
-  'LeftUpLeg.Y': 0,
-  'LeftUpLeg.Z': 0,
-  'LeftLeg.Z': 0,
-  'LeftForeArm.Z': 0,
-  'LeftArm.Y': 0,
-  'LeftArm.X': 0,
-  'LeftArm.Z': 0,
-  'RightUpLeg.X': 0,
-  'RightUpLeg.Y': 0,
-  'RightUpLeg.Z': 0,
-  'RightLeg.Z': 0,
-  'RightForeArm.Z': 0,
-  'RightArm.Y': 0,
-  'RightArm.X': 0,
-  'RightArm.Z': 0,
-};
+const leftParser = new ReadlineParser();
+const rightParser = new ReadlineParser();
 
-function calibrateBonesVoltages(voltagesObj) {
+function calibrateBonesVoltages(bonesNamesWithAxis) {
   const calibratedVoltages = {};
-  const { voltSignsCalibrations } = dataHolder;
+  const { bonesAxesVoltsSigns, calibrationVolts } = dataHolder;
 
-  for (const boneName in voltagesObj) {
-    const boneVolt = voltagesObj[boneName];
+  for (const boneName in bonesNamesWithAxis) {
+    const boneVolt = bonesNamesWithAxis[boneName];
     calibratedVoltages[boneName] =
-      voltSignsCalibrations[boneName] * (boneVolt - calibrationVolts[boneName]);
+      bonesAxesVoltsSigns[boneName] * (boneVolt - calibrationVolts[boneName]);
   }
   return calibratedVoltages;
 }
+
+function getBonesAngles(calibratedBonesVolts) {
+  const { maxVolt, maxAnlge } = dataHolder;
+  const bonesAngles = {};
+  for (const boneName in calibratedBonesVolts) {
+    const boneVolt = calibratedBonesVolts[boneName];
+    bonesAngles[boneName] = Math.ceil(
+      boneVolt / ((1023 * maxVolt) / 5 / maxAnlge)
+    );
+  }
+  return bonesAngles;
+}
+const mapBonesAndAxesNames = (bonesAngles) => {
+  const { bonesAxesNamesMappings } = dataHolder;
+  const mappedData = {};
+  for (const originalBoneNameAndAxis in bonesAngles) {
+    const angle = bonesAngles[originalBoneNameAndAxis];
+    mappedData[bonesAxesNamesMappings[originalBoneNameAndAxis]] = angle;
+  }
+  return mappedData;
+};
 
 /**
  *
@@ -44,6 +49,10 @@ function calibrateBonesVoltages(voltagesObj) {
  */
 const handleArduinoData = (data, sideName) => {
   try {
+    if (!dataHolder.initialized) {
+      return;
+    }
+
     let parsedData = JSON.parse(data);
     let recievedBonesVolts = {};
     const leftBonesVolts = {
@@ -73,17 +82,20 @@ const handleArduinoData = (data, sideName) => {
     } else if (sideName == 'right') {
       recievedBonesVolts = { ...rightBonesVolts };
     }
+
+    const calibratedBonesVolts = calibrateBonesVoltages(recievedBonesVolts);
+    let bonesAngles = getBonesAngles(calibratedBonesVolts);
+    const mappedBoneAndAxesNames = mapBonesAndAxesNames(bonesAngles);
+    bonesAngles = {
+      ...mappedBoneAndAxesNames,
+      // ...dataHolder.pythonCodes,
+      armatureName: dataHolder.armatureName,
+    };
+    console.log(bonesAngles);
     if (dataHolder.isTocalibrateAngles) {
       calibrationVolts = { ...calibrationVolts, ...recievedBonesVolts };
       storeCalibrationData();
     }
-    const calibratedBonesVolts = calibrateBonesVoltages(recievedBonesVolts);
-    let bonesAngles = getBonesAngles(calibratedBonesVolts);
-    bonesAngles = {
-      ...bonesAngles,
-      ...dataHolder.pythonCodes,
-      armatureName: '',
-    };
     global.io.emit('arduinoData', bonesAngles);
   } catch (ok) {}
 };
@@ -92,7 +104,6 @@ const emitArduinoDataToClients = () => {
   try {
     const leftPortName = 'COM' + LEFT_PORT;
     const rightPortName = 'COM' + RIGHT_PORT;
-
     const leftPort = new SerialPort({
       path: leftPortName,
       baudRate: 9600,
@@ -135,7 +146,9 @@ const emitArduinoDataToClients = () => {
 
     leftParser.on('data', (data) => handleArduinoData(data, 'left'));
     rightParser.on('data', (data) => handleArduinoData(data, 'right'));
-  } catch (error) {}
+  } catch (error) {
+    throw error;
+  }
 };
 
 module.exports = emitArduinoDataToClients;
