@@ -3,6 +3,9 @@ const { groupBy } = require('lodash');
 const fs = require('fs');
 let dataHolder = {
   armatureName: '',
+  threeAxesLimbBones: ['LeftUpLeg', 'RightUpLeg', 'LeftArm', 'RightArm'],
+  singleAxisLimbBones: ['LeftForeArm', 'RightForeArm', 'LeftLeg', 'RightLeg'],
+  axes: ['X', 'Y', 'Z'],
   initialized: false,
 };
 
@@ -54,7 +57,7 @@ const populateConfigDataHolder = async () => {
   });
 
   const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
-
+  console.log({ bonesGrouppedByName });
   const config = await db.Config.findOne({});
 
   dataHolder.armatureName = result[0].Bone.Armature.name;
@@ -66,11 +69,18 @@ const populateConfigDataHolder = async () => {
   let bonesAxesVoltsSigns = {};
   let bonesCustomAxesMappings = {};
   let bonesAxesNamesMappings = {};
-
-  for (const boneName in bonesGrouppedByName) {
-    const isBodyBoneName = Array.isArray(bonesGrouppedByName[boneName]);
+  let bonesNamesMappings = {};
+  const localBoneAxesMapping = {
+    X: 'bone_x_axis',
+    Y: 'bone_y_axis',
+    Z: 'bone_z_axis',
+  };
+  for (const bodyBoneName in bonesGrouppedByName) {
+    const isBodyBoneName = Array.isArray(bonesGrouppedByName[bodyBoneName]);
     if (!isBodyBoneName) continue;
-    const boneAxesData = bonesGrouppedByName[boneName];
+    bonesNamesMappings[bodyBoneName] =
+      bonesGrouppedByName[bodyBoneName][0].armatureBoneName;
+    const boneAxesData = bonesGrouppedByName[bodyBoneName];
     const boneAxesCalibrationVolts = {};
     const boneAxesVoltsSigns = {};
     const boneCustomAxesMappings = {};
@@ -89,7 +99,10 @@ const populateConfigDataHolder = async () => {
       const { customAxisName } = boneAxisData;
 
       if (customAxisName) {
-        boneCustomAxesMappings[bodyBoneNameWithAxis] = customAxisName;
+        // boneCustomAxesMappings[bodyBoneNameWithAxis] = customAxisName;
+        boneCustomAxesMappings[
+          `${boneAxisData.bodyBoneName}.${customAxisName}`
+        ] = localBoneAxesMapping[boneAxisData.axisName];
       }
       bonesCustomAxesMappings = {
         ...bonesCustomAxesMappings,
@@ -102,6 +115,7 @@ const populateConfigDataHolder = async () => {
   dataHolder.bonesAxesVoltsSigns = bonesAxesVoltsSigns;
   dataHolder.bonesCustomAxesMappings = bonesCustomAxesMappings;
   dataHolder.bonesAxesNamesMappings = bonesAxesNamesMappings;
+  dataHolder.bonesNamesMappings = bonesNamesMappings;
   dataHolder.initialized = true;
 };
 

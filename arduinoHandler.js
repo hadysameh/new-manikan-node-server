@@ -9,6 +9,159 @@ const RIGHT_PORT = 9;
 const leftParser = new ReadlineParser();
 const rightParser = new ReadlineParser();
 
+const get1AxisBonePythonCode = ({
+  armatureName,
+  boneName,
+  boneAxis,
+  angle,
+}) => {
+  const axesIndices = {
+    X: 0,
+    Y: 1,
+    Z: 2,
+  };
+  const axisIndex = axesIndices[boneAxis];
+  const pythonCode = `
+selected_armature = bpy.data.objects['${armatureName}']
+selected_bone_in_pose_mode = selected_armature.pose.bones['${boneName}']
+
+selected_bone_in_pose_mode.rotation_mode = 'XYZ'
+selected_bone_in_pose_mode.rotation_euler[${axisIndex}] = math.radians(${angle});
+    `;
+  return pythonCode;
+};
+
+const get3AxisBonePythonCode = ({
+  armatureName,
+  boneName,
+  customAxesCode,
+  xAxisAngle,
+  yAxisAngle,
+  zAxisAngle,
+}) => {
+  return `
+my_dict = {
+# Add your key-value pairs here
+}
+arm_bone_radian_angles = {  }
+arm_bone_radian_angles['Y'] = math.radians( ${xAxisAngle} )
+arm_bone_radian_angles['X'] = math.radians(  ${yAxisAngle} )
+arm_bone_radian_angles['Z'] = math.radians(  ${zAxisAngle} )
+
+selected_armature = bpy.data.objects["${armatureName}"]
+
+# bpy.ops.object.mode_set(mode='POSE')
+bone_name="${boneName}"
+if bone_name not in selected_armature.pose.bones:
+  return
+
+pose_bone = get_pose_bone("${armatureName}",bone_name="${boneName}")
+
+pose_bone.rotation_mode = "QUATERNION"
+
+pose_bone.rotation_quaternion = (1, 0, 0, 0)
+bpy.context.view_layer.update()
+
+
+local_y_rotation = mathutils.Quaternion(mathutils.Vector((0, 1, 0)), arm_bone_radian_angles['Z'])
+
+bone_x_axis, bone_y_axis, bone_z_axis = get_bone_global_axes("${armatureName}", "${boneName}")
+# Convert the custom axis to the bone's local space
+${customAxesCode}
+# Create a quaternion rotation
+quat_x_rotation =mathutils.Quaternion(custom_x_axis_local, arm_bone_radian_angles['X'])
+quat_z_rotation =mathutils.Quaternion(custom_z_axis_local, arm_bone_radian_angles['Y'])
+
+# Apply the rotation in the bone's local space
+pose_bone.rotation_quaternion = quat_z_rotation @ quat_x_rotation  @local_y_rotation
+bpy.context.view_layer.update()
+    `;
+};
+
+const getCodesForOneAxisBones = (bonesAngles) => {
+  const { singleAxisLimbBones, bonesNamesMappings, armatureName } = dataHolder;
+
+  const bonesCodes = {};
+
+  for (const bodyBoneName of singleAxisLimbBones) {
+    const xAxisAngle = bonesAngles[`${bodyBoneName}.X`];
+    const yAxisAngle = bonesAngles[`${bodyBoneName}.Y`];
+    const zAxisAngle = bonesAngles[`${bodyBoneName}.Z`];
+    const armatureBoneName = bonesNamesMappings[bodyBoneName];
+
+    if (xAxisAngle) {
+      bonesCodes[`${armatureBoneName}.code`] = get1AxisBonePythonCode({
+        angle: xAxisAngle,
+        armatureName,
+        boneAxis: 'X',
+        boneName: armatureBoneName,
+      });
+    } else if (yAxisAngle) {
+      bonesCodes[`${armatureBoneName}.code`] = get1AxisBonePythonCode({
+        angle: yAxisAngle,
+        armatureName,
+        boneAxis: 'Y',
+        boneName: armatureBoneName,
+      });
+    } else if (zAxisAngle) {
+      bonesCodes[`${armatureBoneName}.code`] = get1AxisBonePythonCode({
+        angle: zAxisAngle,
+        armatureName,
+        boneAxis: 'Y',
+        boneName: armatureBoneName,
+      });
+    }
+  }
+  return bonesCodes;
+};
+
+const getCodesForThreeAxesBones = (bonesAngles) => {
+  const {
+    threeAxesLimbBones,
+    bonesCustomAxesMappings,
+    bonesNamesMappings,
+    armatureName,
+  } = dataHolder;
+  const bonesCodes = {};
+  for (const bodyBoneName of threeAxesLimbBones) {
+    const xAxisAngle = bonesAngles[`${bodyBoneName}.X`];
+    const yAxisAngle = bonesAngles[`${bodyBoneName}.Y`];
+    const zAxisAngle = bonesAngles[`${bodyBoneName}.Z`];
+
+    if (!(xAxisAngle && yAxisAngle && zAxisAngle)) {
+      continue;
+    }
+
+    const customXAxisName = 'custom_x_axis_local';
+    const customZAxisName = 'custom_z_axis_local';
+
+    const localBoneAxisForCustomXAxis =
+      bonesCustomAxesMappings[`${bodyBoneName}.${customXAxisName}`];
+
+    const localBoneAxisForCustomZAxis =
+      bonesCustomAxesMappings[`${bodyBoneName}.${customZAxisName}`];
+
+    if (!(localBoneAxisForCustomXAxis && localBoneAxisForCustomZAxis)) {
+      continue;
+    }
+
+    const customAxesCode = `
+${customXAxisName} = ${localBoneAxisForCustomXAxis} @ pose_bone.matrix.to_3x3().inverted()
+${customZAxisName} = ${localBoneAxisForCustomZAxis} @ pose_bone.matrix.to_3x3().inverted()
+    `;
+    const armatureBoneName = bonesNamesMappings[bodyBoneName];
+    bonesCodes[`${armatureBoneName}.code`] = get3AxisBonePythonCode({
+      armatureName,
+      boneName: armatureBoneName,
+      customAxesCode,
+      xAxisAngle,
+      yAxisAngle,
+      zAxisAngle,
+    });
+  }
+  return bonesCodes;
+};
+
 function calibrateBonesVoltages(bonesNamesWithAxis) {
   const calibratedVoltages = {};
   const { bonesAxesVoltsSigns, calibrationVolts } = dataHolder;
@@ -82,20 +235,23 @@ const handleArduinoData = (data, sideName) => {
     } else if (sideName == 'right') {
       recievedBonesVolts = { ...rightBonesVolts };
     }
-
     const calibratedBonesVolts = calibrateBonesVoltages(recievedBonesVolts);
     let bonesAngles = getBonesAngles(calibratedBonesVolts);
+    const codesForThreeAxesBones = getCodesForThreeAxesBones(bonesAngles);
+    const codesForOneAxisBones = getCodesForOneAxisBones(bonesAngles);
+    console.log({ codesForThreeAxesBones, codesForOneAxisBones });
+
     const mappedBoneAndAxesNames = mapBonesAndAxesNames(bonesAngles);
     bonesAngles = {
       ...mappedBoneAndAxesNames,
       // ...dataHolder.pythonCodes,
       armatureName: dataHolder.armatureName,
     };
-    console.log(bonesAngles);
-    if (dataHolder.isTocalibrateAngles) {
-      calibrationVolts = { ...calibrationVolts, ...recievedBonesVolts };
-      storeCalibrationData();
-    }
+    // console.log(bonesAngles);
+    // if (dataHolder.isTocalibrateAngles) {
+    //   calibrationVolts = { ...calibrationVolts, ...recievedBonesVolts };
+    //   storeCalibrationData();
+    // }
     global.io.emit('arduinoData', bonesAngles);
   } catch (ok) {}
 };
