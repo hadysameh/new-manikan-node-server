@@ -107,7 +107,7 @@ const getCodesForOneAxisBones = (bonesAngles) => {
       bonesCodes[`${armatureBoneName}.code`] = get1AxisBonePythonCode({
         angle: zAxisAngle,
         armatureName,
-        boneAxis: 'Y',
+        boneAxis: 'Z',
         boneName: armatureBoneName,
       });
     }
