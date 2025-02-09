@@ -17,7 +17,7 @@ const getOne = catchAsync(async (req, res, next) => {
 const update = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const whereCondition = {};
-  const { boneId, axisId, customAxisId, calibrationVolt } = req.body;
+  const { boneId, axisId, data } = req.body;
 
   if (id) {
     whereCondition = { id };
@@ -25,10 +25,7 @@ const update = catchAsync(async (req, res, next) => {
     whereCondition = { boneId, axisId, customAxisId };
   }
 
-  await db.Armature.update(
-    { boneId, axisId, customAxisId, calibrationVolt },
-    { where: whereCondition }
-  );
+  await db.Armature.update({ boneId, axisId, data }, { where: whereCondition });
   standardResponse.ok(res);
 });
 

@@ -49,7 +49,23 @@ const selectAndGetArmatureData = catchAsync(async (req, res, next) => {
   standardResponse.ok(res, armatureData);
 });
 
+const updateBoneAxisConfig = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const whereCondition = {};
+  const { boneId, axisId, data } = req.body;
+
+  if (id) {
+    whereCondition = { id };
+  } else {
+    whereCondition = { boneId, axisId, customAxisId };
+  }
+
+  await db.Armature.update({ boneId, axisId, data }, { where: whereCondition });
+  standardResponse.ok(res);
+});
+
 module.exports = {
   getCalibrationPageOptions,
   selectAndGetArmatureData,
+  updateBoneAxisConfig,
 };
