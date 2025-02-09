@@ -57,7 +57,6 @@ const populateConfigDataHolder = async () => {
   });
 
   const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
-  console.log({ bonesGrouppedByName });
   const config = await db.Config.findOne({});
 
   dataHolder.armatureName = result[0].Bone.Armature.name;

@@ -40,41 +40,37 @@ const get3AxisBonePythonCode = ({
   zAxisAngle,
 }) => {
   return `
-my_dict = {
-# Add your key-value pairs here
-}
 arm_bone_radian_angles = {  }
-arm_bone_radian_angles['Y'] = math.radians( ${xAxisAngle} )
-arm_bone_radian_angles['X'] = math.radians(  ${yAxisAngle} )
-arm_bone_radian_angles['Z'] = math.radians(  ${zAxisAngle} )
+arm_bone_radian_angles['Y'] = math.radians(${xAxisAngle})
+arm_bone_radian_angles['X'] = math.radians(${yAxisAngle})
+arm_bone_radian_angles['Z'] = math.radians(${zAxisAngle})
 
 selected_armature = bpy.data.objects["${armatureName}"]
 
 # bpy.ops.object.mode_set(mode='POSE')
 bone_name="${boneName}"
-if bone_name not in selected_armature.pose.bones:
-  return
+if bone_name in selected_armature.pose.bones:
 
-pose_bone = get_pose_bone("${armatureName}",bone_name="${boneName}")
+  pose_bone = get_pose_bone("${armatureName}",bone_name="${boneName}")
 
-pose_bone.rotation_mode = "QUATERNION"
+  pose_bone.rotation_mode = "QUATERNION"
 
-pose_bone.rotation_quaternion = (1, 0, 0, 0)
-bpy.context.view_layer.update()
+  pose_bone.rotation_quaternion = (1, 0, 0, 0)
+  bpy.context.view_layer.update()
 
 
-local_y_rotation = mathutils.Quaternion(mathutils.Vector((0, 1, 0)), arm_bone_radian_angles['Z'])
+  local_y_rotation = mathutils.Quaternion(mathutils.Vector((0, 1, 0)), arm_bone_radian_angles['Z'])
 
-bone_x_axis, bone_y_axis, bone_z_axis = get_bone_global_axes("${armatureName}", "${boneName}")
-# Convert the custom axis to the bone's local space
-${customAxesCode}
-# Create a quaternion rotation
-quat_x_rotation =mathutils.Quaternion(custom_x_axis_local, arm_bone_radian_angles['X'])
-quat_z_rotation =mathutils.Quaternion(custom_z_axis_local, arm_bone_radian_angles['Y'])
+  bone_x_axis, bone_y_axis, bone_z_axis = get_bone_global_axes("${armatureName}", "${boneName}")
+  # Convert the custom axis to the bone's local space
+    ${customAxesCode}
+  # Create a quaternion rotation
+  quat_x_rotation =mathutils.Quaternion(custom_x_axis_local, arm_bone_radian_angles['X'])
+  quat_z_rotation =mathutils.Quaternion(custom_z_axis_local, arm_bone_radian_angles['Y'])
 
-# Apply the rotation in the bone's local space
-pose_bone.rotation_quaternion = quat_z_rotation @ quat_x_rotation  @local_y_rotation
-bpy.context.view_layer.update()
+  # Apply the rotation in the bone's local space
+  pose_bone.rotation_quaternion = quat_z_rotation @ quat_x_rotation  @local_y_rotation
+  bpy.context.view_layer.update()
     `;
 };
 
@@ -146,8 +142,8 @@ const getCodesForThreeAxesBones = (bonesAngles) => {
     }
 
     const customAxesCode = `
-${customXAxisName} = ${localBoneAxisForCustomXAxis} @ pose_bone.matrix.to_3x3().inverted()
-${customZAxisName} = ${localBoneAxisForCustomZAxis} @ pose_bone.matrix.to_3x3().inverted()
+  ${customXAxisName} = ${localBoneAxisForCustomXAxis} @ pose_bone.matrix.to_3x3().inverted()
+  ${customZAxisName} = ${localBoneAxisForCustomZAxis} @ pose_bone.matrix.to_3x3().inverted()
     `;
     const armatureBoneName = bonesNamesMappings[bodyBoneName];
     bonesCodes[`${armatureBoneName}.code`] = get3AxisBonePythonCode({
@@ -239,20 +235,9 @@ const handleArduinoData = (data, sideName) => {
     let bonesAngles = getBonesAngles(calibratedBonesVolts);
     const codesForThreeAxesBones = getCodesForThreeAxesBones(bonesAngles);
     const codesForOneAxisBones = getCodesForOneAxisBones(bonesAngles);
-    console.log({ codesForThreeAxesBones, codesForOneAxisBones });
 
-    const mappedBoneAndAxesNames = mapBonesAndAxesNames(bonesAngles);
-    bonesAngles = {
-      ...mappedBoneAndAxesNames,
-      // ...dataHolder.pythonCodes,
-      armatureName: dataHolder.armatureName,
-    };
-    // console.log(bonesAngles);
-    // if (dataHolder.isTocalibrateAngles) {
-    //   calibrationVolts = { ...calibrationVolts, ...recievedBonesVolts };
-    //   storeCalibrationData();
-    // }
-    global.io.emit('arduinoData', bonesAngles);
+    const codesToEmit = { ...codesForThreeAxesBones, ...codesForOneAxisBones };
+    global.io.emit('arduinoData', codesToEmit);
   } catch (ok) {}
 };
 
