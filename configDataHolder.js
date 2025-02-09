@@ -3,6 +3,7 @@ const { groupBy } = require('lodash');
 const fs = require('fs');
 let dataHolder = {
   armatureName: '',
+  armatureId: null,
   threeAxesLimbBones: ['LeftUpLeg', 'RightUpLeg', 'LeftArm', 'RightArm'],
   singleAxisLimbBones: ['LeftForeArm', 'RightForeArm', 'LeftLeg', 'RightLeg'],
   axes: ['X', 'Y', 'Z'],
@@ -11,6 +12,14 @@ let dataHolder = {
 
 const populateConfigDataHolder = async () => {
   dataHolder.initialized = false;
+  const armatureWhereQuery = {};
+
+  if (dataHolder.armatureId) {
+    armatureWhereQuery.id = dataHolder.armatureId;
+  } else {
+    armatureWhereQuery.isActive = true;
+  }
+
   const result = await db.BoneAxisConfig.findAll({
     include: [
       {
@@ -20,7 +29,7 @@ const populateConfigDataHolder = async () => {
             model: db.Armature,
             attributes: ['name'],
 
-            where: { isActive: true },
+            where: armatureWhereQuery,
           },
         ],
       },

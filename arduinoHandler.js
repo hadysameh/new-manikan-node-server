@@ -40,10 +40,10 @@ const get3AxisBonePythonCode = ({
   zAxisAngle,
 }) => {
   return `
-arm_bone_radian_angles = {  }
-arm_bone_radian_angles['Y'] = math.radians(${xAxisAngle})
-arm_bone_radian_angles['X'] = math.radians(${yAxisAngle})
+arm_bone_radian_angles = {  } 
+arm_bone_radian_angles['X'] = math.radians(${xAxisAngle})
 arm_bone_radian_angles['Z'] = math.radians(${zAxisAngle})
+arm_bone_radian_angles['Y'] = math.radians(${yAxisAngle})
 
 selected_armature = bpy.data.objects["${armatureName}"]
 
@@ -136,7 +136,6 @@ const getCodesForThreeAxesBones = (bonesAngles) => {
 
     const localBoneAxisForCustomZAxis =
       bonesCustomAxesMappings[`${bodyBoneName}.${customZAxisName}`];
-
     if (!(localBoneAxisForCustomXAxis && localBoneAxisForCustomZAxis)) {
       continue;
     }
@@ -181,15 +180,6 @@ function getBonesAngles(calibratedBonesVolts) {
   }
   return bonesAngles;
 }
-const mapBonesAndAxesNames = (bonesAngles) => {
-  const { bonesAxesNamesMappings } = dataHolder;
-  const mappedData = {};
-  for (const originalBoneNameAndAxis in bonesAngles) {
-    const angle = bonesAngles[originalBoneNameAndAxis];
-    mappedData[bonesAxesNamesMappings[originalBoneNameAndAxis]] = angle;
-  }
-  return mappedData;
-};
 
 /**
  *
@@ -197,40 +187,47 @@ const mapBonesAndAxesNames = (bonesAngles) => {
  * @param {string} sideName
  */
 const handleArduinoData = (data, sideName) => {
+  let parsedData;
+
   try {
-    if (!dataHolder.initialized) {
+    parsedData = JSON.parse(data);
+  } catch (error) {
+    parsedData = null;
+  }
+
+  try {
+    if (!dataHolder.initialized || !parsedData) {
       return;
     }
-
-    let parsedData = JSON.parse(data);
+    // console.log({ data });
     let recievedBonesVolts = {};
     const leftBonesVolts = {
       'LeftLeg.X': parsedData[0],
-      'LeftUpLeg.Z': parsedData[1],
-      'LeftUpLeg.Y': parsedData[2],
+      'LeftUpLeg.Y': parsedData[1],
+      'LeftUpLeg.Z': parsedData[2],
       'LeftUpLeg.X': parsedData[3],
       'LeftArm.X': parsedData[4],
-      'LeftArm.Y': parsedData[5],
-      'LeftArm.Z': parsedData[6],
+      'LeftArm.Z': parsedData[5],
+      'LeftArm.Y': parsedData[6],
       'LeftForeArm.Z': parsedData[7],
     };
 
     const rightBonesVolts = {
       'RightLeg.X': parsedData[0],
-      'RightUpLeg.Z': parsedData[1],
-      'RightUpLeg.Y': parsedData[2],
+      'RightUpLeg.Y': parsedData[1],
+      'RightUpLeg.Z': parsedData[2],
       'RightUpLeg.X': parsedData[3],
       'RightArm.X': parsedData[4],
-      'RightArm.Y': parsedData[5],
-      'RightArm.Z': parsedData[6],
+      'RightArm.Z': parsedData[5],
+      'RightArm.Y': parsedData[6],
       'RightForeArm.Z': parsedData[7],
     };
-
     if (sideName == 'left') {
       recievedBonesVolts = { ...leftBonesVolts };
     } else if (sideName == 'right') {
       recievedBonesVolts = { ...rightBonesVolts };
     }
+
     const calibratedBonesVolts = calibrateBonesVoltages(recievedBonesVolts);
     let bonesAngles = getBonesAngles(calibratedBonesVolts);
     const codesForThreeAxesBones = getCodesForThreeAxesBones(bonesAngles);

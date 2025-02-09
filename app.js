@@ -7,6 +7,7 @@ const globalErrorHandler = require('./utils/globalErrorHandler.js');
 const armatureRouter = require('./routes/armatureRouter.js');
 const boneAxisConfigRouter = require('./routes/boneAxisConfigRouter.js');
 const emitArduinoDataToClients = require('./arduinoHandler.js');
+const calibrationPageOptionsRouter = require('./routes/calibrationPageOptionsRouter.js');
 
 const app = express();
 
@@ -29,7 +30,7 @@ app.use('/api', calibrationRouter);
 
 app.use('/api/armature', armatureRouter);
 app.use('/api/boneaxisconfig', boneAxisConfigRouter);
-
+app.use('/api/calibrationpageoptions', calibrationPageOptionsRouter);
 // Serve static files from the dist directory
 const distPath = path.join(__dirname, 'react-ui', 'dist');
 app.use(express.static(distPath));
