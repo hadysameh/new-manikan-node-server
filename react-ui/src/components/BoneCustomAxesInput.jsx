@@ -3,13 +3,19 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 
-const changeBoneAxisConfig = async ({ id, customAxisId, data }) => {
+const changeBoneAxisConfig = async ({
+  id,
+  customAxisId,
+  voltSign,
+  calibrationVolt,
+}) => {
   const res = await axios.put(
     'http://localhost:3000/api/calibrationpageoptions/updateboneaxisconfig/' +
       id,
     {
       customAxisId,
-      data,
+      voltSign,
+      calibrationVolt,
     }
   );
   return res;
@@ -18,19 +24,25 @@ const changeBoneAxisConfig = async ({ id, customAxisId, data }) => {
 export function BoneCustomAxesInput({
   boneAxisConfigData,
   boneCustomAxes,
-  socketMessage,
+  voltsSocketMessage,
+  anglessocketMessage,
 }) {
   const queryClient = useQueryClient();
 
-  const boneNameWithAxis =
+  const armatureBoneNameWithAxis =
     boneAxisConfigData.armatureBoneName + '.' + boneAxisConfigData.axisName;
 
-  const currentBoneAxisVolt = socketMessage?.[boneNameWithAxis];
+  const bodyBoneNameWithAxis =
+    boneAxisConfigData.bodyBoneName + '.' + boneAxisConfigData.axisName;
 
+  const currentBoneAxisVolt = voltsSocketMessage?.[bodyBoneNameWithAxis];
+  const currentBoneAxisAngle = anglessocketMessage?.[bodyBoneNameWithAxis];
+
+  // console.log({ anglessocketMessage });
   const [voltSign, setVoltSign] = useState();
   const [customAxisId, setCustomAxisId] = useState();
 
-  const { data, isPending, isSuccess, mutate } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: ({
       id = boneAxisConfigData?.id,
       customAxisId,
@@ -55,11 +67,10 @@ export function BoneCustomAxesInput({
   useEffect(() => {
     // Define the event handler
     const handleButtonClick = (event) => {
-      mutate({
-        customAxisId,
-        voltSign,
+      const mutationData = {
         calibrationVolt: currentBoneAxisVolt,
-      });
+      };
+      mutate(mutationData);
     };
 
     // Listen to the custom event
@@ -72,7 +83,11 @@ export function BoneCustomAxesInput({
   }, []);
 
   useEffect(() => {
-    setVoltSign(boneAxisConfigData?.voltSign);
+    if (boneAxisConfigData?.voltSign == 1) {
+      setVoltSign(1);
+    } else {
+      setVoltSign(-1);
+    }
     setCustomAxisId(boneAxisConfigData?.CustomAxis?.id);
   }, []);
 
@@ -90,11 +105,17 @@ export function BoneCustomAxesInput({
         >
           {voltSign === 1 ? '+' : '-'}
         </button>
-        <p>{boneNameWithAxis}</p>
+        <p>{armatureBoneNameWithAxis}</p>
+        <input
+          className="form-control"
+          disabled
+          value={currentBoneAxisAngle}
+        ></input>
       </div>
       <div className="d-flex gap-1 ">
         <p className="pt-1 text-center">axis_calibration:</p>
         <p className="pt-1 text-center">{boneAxisConfigData.axisName}</p>
+
         <select
           className="form-select "
           onChange={({ target }) => {

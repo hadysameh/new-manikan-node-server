@@ -8,7 +8,6 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import socket from './socket';
-import BoneAnlgeInput from './components/BoneAxisAnlgeInput';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BoneCustomAxesInput } from './components/BoneCustomAxesInput';
 import axios from 'axios';
@@ -28,7 +27,8 @@ const getAndSelectArmatureData = async (armatureId) => {
 };
 
 function App() {
-  const [socketMessage, setSocketMessage] = useState();
+  const [voltsSocketMessage, setVoltsSocketMessage] = useState();
+  const [anglessocketMessage, setAnglesSocketMessage] = useState();
   const [maxVolt, setMaxVolt] = useState(4.75);
 
   const {
@@ -53,15 +53,29 @@ function App() {
   useEffect(() => {
     // Listen for messages from the server
     socket.on('volts', (message) => {
-      setSocketMessage(message);
+      setVoltsSocketMessage(message);
     });
-
+    socket.on('angles', (message) => {
+      setAnglesSocketMessage(message);
+    });
     // Cleanup on component unmount
     return () => {
-      socket.off('arduinoData');
+      socket.off('volts');
+      socket.off('angles');
     };
   }, []);
 
+  const rightColumn = [];
+  const leftColumn = [];
+
+  for (let index = 0; index < bonesAxesConfig?.data?.length; index++) {
+    const boneAxisConfig = bonesAxesConfig?.data?.[index];
+    if (index < bonesAxesConfig?.data?.length / 2) {
+      rightColumn.push(boneAxisConfig);
+    } else {
+      leftColumn.push(boneAxisConfig);
+    }
+  }
   return (
     <>
       <div>
@@ -72,7 +86,8 @@ function App() {
                 boneAxisConfigData={boneAxisConfig}
                 boneCustomAxes={pageOptions?.data?.customAxes}
                 boneLocalAxes={pageOptions?.data?.axes}
-                socketMessage={socketMessage}
+                voltsSocketMessage={voltsSocketMessage}
+                anglessocketMessage={anglessocketMessage}
               />
               <br />
             </div>

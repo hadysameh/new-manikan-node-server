@@ -65,7 +65,6 @@ const populateConfigDataHolder = async () => {
       voltSign: dataValues.voltSign,
     };
   });
-
   const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
   const config = await db.Config.findOne({});
 

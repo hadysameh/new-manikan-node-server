@@ -59,14 +59,14 @@ if bone_name in selected_armature.pose.bones:
   bpy.context.view_layer.update()
 
 
-  local_y_rotation = mathutils.Quaternion(mathutils.Vector((0, 1, 0)), arm_bone_radian_angles['Z'])
+  local_y_rotation = mathutils.Quaternion(mathutils.Vector((0, 1, 0)), arm_bone_radian_angles['Y'])
 
   bone_x_axis, bone_y_axis, bone_z_axis = get_bone_global_axes("${armatureName}", "${boneName}")
   # Convert the custom axis to the bone's local space
     ${customAxesCode}
   # Create a quaternion rotation
   quat_x_rotation =mathutils.Quaternion(custom_x_axis_local, arm_bone_radian_angles['X'])
-  quat_z_rotation =mathutils.Quaternion(custom_z_axis_local, arm_bone_radian_angles['Y'])
+  quat_z_rotation =mathutils.Quaternion(custom_z_axis_local, arm_bone_radian_angles['Z'])
 
   # Apply the rotation in the bone's local space
   pose_bone.rotation_quaternion = quat_z_rotation @ quat_x_rotation  @local_y_rotation
@@ -161,25 +161,37 @@ function calibrateBonesVoltages(bonesNamesWithAxis) {
   const calibratedVoltages = {};
   const { bonesAxesVoltsSigns, calibrationVolts } = dataHolder;
 
-  for (const boneName in bonesNamesWithAxis) {
-    const boneVolt = bonesNamesWithAxis[boneName];
-    calibratedVoltages[boneName] =
-      bonesAxesVoltsSigns[boneName] * (boneVolt - calibrationVolts[boneName]);
+  for (const boneNameWithAxis in bonesNamesWithAxis) {
+    const boneVolt = bonesNamesWithAxis[boneNameWithAxis];
+    calibratedVoltages[boneNameWithAxis] =
+      bonesAxesVoltsSigns[boneNameWithAxis] *
+      (boneVolt - calibrationVolts[boneNameWithAxis]);
   }
   return calibratedVoltages;
 }
 
 function getBonesAngles(calibratedBonesVolts) {
   const { maxVolt, maxAnlge } = dataHolder;
+  const calibratedMaxVolt = (1023 * maxVolt) / 5;
+
   const bonesAngles = {};
-  for (const boneName in calibratedBonesVolts) {
-    const boneVolt = calibratedBonesVolts[boneName];
-    bonesAngles[boneName] = Math.ceil(
-      boneVolt / ((1023 * maxVolt) / 5 / maxAnlge)
+  for (const bonesNamesWithAxis in calibratedBonesVolts) {
+    const boneVolt = calibratedBonesVolts[bonesNamesWithAxis];
+    bonesAngles[bonesNamesWithAxis] = Math.ceil(
+      (boneVolt * maxAnlge) / calibratedMaxVolt
     );
   }
   return bonesAngles;
 }
+let codesToEmit = {};
+let voltsToEmit = {};
+let bonesAnglesToEmit = {};
+
+setInterval(() => {
+  global.io.emit('arduinoData', codesToEmit);
+  global.io.emit('volts', voltsToEmit);
+  global.io.emit('angles', bonesAnglesToEmit);
+}, 500);
 
 /**
  *
@@ -224,22 +236,26 @@ const handleArduinoData = (data, sideName) => {
     };
     if (sideName == 'left') {
       recievedBonesVolts = { ...leftBonesVolts };
+      Object.assign(voltsToEmit, leftBonesVolts);
     } else if (sideName == 'right') {
+      Object.assign(voltsToEmit, rightBonesVolts);
       recievedBonesVolts = { ...rightBonesVolts };
     }
 
     const calibratedBonesVolts = calibrateBonesVoltages(recievedBonesVolts);
     let bonesAngles = getBonesAngles(calibratedBonesVolts);
+
     const codesForThreeAxesBones = getCodesForThreeAxesBones(bonesAngles);
     const codesForOneAxisBones = getCodesForOneAxisBones(bonesAngles);
 
-    const codesToEmit = { ...codesForThreeAxesBones, ...codesForOneAxisBones };
-    console.log({ 'dataHolder.calibrationVolts': dataHolder.calibrationVolts });
-    global.io.emit('arduinoData', codesToEmit);
-    global.io.emit('volts', {
-      ...leftBonesVolts,
-      ...rightBonesVolts,
-    });
+    const newCodesToEmit = {
+      ...codesForThreeAxesBones,
+      ...codesForOneAxisBones,
+    };
+    // console.log({ 'dataHolder.calibrationVolts': dataHolder.calibrationVolts });
+    Object.assign(codesToEmit, newCodesToEmit);
+
+    Object.assign(bonesAnglesToEmit, bonesAngles);
   } catch (ok) {}
 };
 

@@ -37,7 +37,8 @@ const selectAndGetArmatureData = catchAsync(async (req, res, next) => {
     ],
     attributes: [
       'id', // Include Post fields you want
-      'data',
+      'calibrationVolt',
+      'voltSign',
       [db.sequelize.col(`Bone.bodyBoneName`), 'bodyBoneName'],
       [db.sequelize.col('Bone.armatureBoneName'), 'armatureBoneName'],
       [db.sequelize.col('Axis.name'), 'axisName'],
@@ -53,7 +54,6 @@ const updateBoneAxisConfig = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   let whereCondition = {};
   const { boneId, axisId, customAxisId, voltSign, calibrationVolt } = req.body;
-
   if (id) {
     whereCondition = { id: 1 * id };
   } else {
