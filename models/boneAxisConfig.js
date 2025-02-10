@@ -43,13 +43,17 @@ module.exports = (sequelize, DataTypes) => {
       customAxisId: {
         // Foreign key to the User model
         type: DataTypes.INTEGER,
-        allowNull: false,
         references: {
           model: 'CustomAxes', // Name of the referenced table
           key: 'id', // Primary key of the referenced table
         },
       },
-      data: DataTypes.JSON,
+      voltSign: {
+        type: DataTypes.INTEGER,
+      },
+      calibrationVolt: {
+        type: DataTypes.INTEGER,
+      },
     },
     {
       sequelize,

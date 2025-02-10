@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ limit: '10kb' }));
 
 app.use('/*', (req, res, next) => {
-  console.log(req.originalUrl);
+  // console.log(req.originalUrl);
   next();
 });
 

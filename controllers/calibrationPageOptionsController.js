@@ -17,7 +17,7 @@ const selectAndGetArmatureData = catchAsync(async (req, res, next) => {
     include: [
       {
         model: db.Bone,
-        attributes: [],
+        attributes: ['id'],
         include: [
           {
             model: db.Armature,
@@ -51,16 +51,20 @@ const selectAndGetArmatureData = catchAsync(async (req, res, next) => {
 
 const updateBoneAxisConfig = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const whereCondition = {};
-  const { boneId, axisId, data } = req.body;
+  let whereCondition = {};
+  const { boneId, axisId, customAxisId, voltSign, calibrationVolt } = req.body;
 
   if (id) {
-    whereCondition = { id };
+    whereCondition = { id: 1 * id };
   } else {
     whereCondition = { boneId, axisId, customAxisId };
   }
+  const result = await db.BoneAxisConfig.update(
+    { boneId, axisId, customAxisId, voltSign, calibrationVolt },
+    { where: whereCondition }
+  );
+  await populateConfigDataHolder();
 
-  await db.Armature.update({ boneId, axisId, data }, { where: whereCondition });
   standardResponse.ok(res);
 });
 

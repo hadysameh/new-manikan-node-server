@@ -44,7 +44,8 @@ const populateConfigDataHolder = async () => {
     ],
     attributes: [
       'id', // Include Post fields you want
-      'data',
+      'calibrationVolt',
+      'voltSign',
       [db.sequelize.col(`Bone.bodyBoneName`), 'bodyBoneName'],
       [db.sequelize.col('Bone.armatureBoneName'), 'armatureBoneName'],
       [db.sequelize.col('Axis.name'), 'axisName'],
@@ -60,8 +61,8 @@ const populateConfigDataHolder = async () => {
       bodyBoneName: dataValues.bodyBoneName,
       axisName: dataValues.axisName,
       customAxisName: dataValues.customAxisName,
-      calibrationVolt: JSON.parse(dataValues.data).calibrationVolt,
-      voltSign: JSON.parse(dataValues.data).voltSign,
+      calibrationVolt: dataValues.calibrationVolt,
+      voltSign: dataValues.voltSign,
     };
   });
 

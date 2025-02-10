@@ -234,7 +234,12 @@ const handleArduinoData = (data, sideName) => {
     const codesForOneAxisBones = getCodesForOneAxisBones(bonesAngles);
 
     const codesToEmit = { ...codesForThreeAxesBones, ...codesForOneAxisBones };
+    console.log({ 'dataHolder.calibrationVolts': dataHolder.calibrationVolts });
     global.io.emit('arduinoData', codesToEmit);
+    global.io.emit('volts', {
+      ...leftBonesVolts,
+      ...rightBonesVolts,
+    });
   } catch (ok) {}
 };
 
