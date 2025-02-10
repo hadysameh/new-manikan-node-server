@@ -13,55 +13,46 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BoneCustomAxesInput } from './components/BoneCustomAxesInput';
 import axios from 'axios';
 
-const getCalibrateVoltSigns = async () => {
+const getPageOptions = async () => {
   const { data } = await axios.get(
-    'http://localhost:3000/api/getcalibratevoltsign'
+    'http://localhost:3000/api/calibrationpageoptions/'
   );
   return data;
 };
 
-const getCalibratedCustomAxes = async () => {
+const getAndSelectArmatureData = async (armatureId) => {
   const { data } = await axios.get(
-    'http://localhost:3000/api/getcalibratecustomaxis'
+    `http://localhost:3000/api/calibrationpageoptions/selectandgetarmaturedata/${armatureId}`
   );
   return data;
-};
-const calibrateAngles = async () => {
-  const res = await axios.post('http://localhost:3000/api/calibrateangels');
-  return res;
 };
 
 function App() {
   const [socketMessage, setSocketMessage] = useState();
   const [maxVolt, setMaxVolt] = useState(4.75);
 
-  const { data: calibrationSigns, isLoading: isCalibrationSignsLoading } =
-    useQuery({
-      queryKey: ['getcalibratevoltsign'],
-      queryFn: getCalibrateVoltSigns,
-      staleTime: Infinity,
-    });
-
   const {
-    data: calibratedCustomAxes,
-    isLoading: isCalibratedCustomAxesLoading,
+    data: pageOptions,
+    isLoading: isPageOptionsLoading,
+    isSuccess: isPageOptionsFetched,
   } = useQuery({
-    queryKey: ['getcalibratecustomaxis'],
-    queryFn: getCalibratedCustomAxes,
+    queryKey: ['calibrationpageoptions'],
+    queryFn: getPageOptions,
     staleTime: Infinity,
   });
 
-  const {
-    mutate: mutateAnglesCalibration,
-    isPending: isAnglesCalibrationPending,
-    isSuccess: isAnglesCalibrated,
-  } = useMutation({
-    mutationFn: calibrateAngles,
-  });
+  const { data: bonesAxesConfig, isLoading: isCalibratedCustomAxesLoading } =
+    useQuery({
+      queryKey: ['selectandgetarmaturedata'],
+      queryFn: () => getAndSelectArmatureData(1),
+      enabled: isPageOptionsFetched,
+      staleTime: Infinity,
+    });
+  // console.log(pageOptions, bonesAxesConfig);
 
   useEffect(() => {
     // Listen for messages from the server
-    socket.on('arduinoData', (message) => {
+    socket.on('volts', (message) => {
       setSocketMessage(message);
     });
 
@@ -71,93 +62,31 @@ function App() {
     };
   }, []);
 
-  const bonesAxesNames = [
-    'mixamorig:LeftUpLeg.X',
-    'mixamorig:LeftUpLeg.Y',
-    'mixamorig:LeftUpLeg.Z',
-    'mixamorig:LeftLeg.X',
-    'mixamorig:LeftForeArm.Z',
-    'mixamorig:LeftArm.Y',
-    'mixamorig:LeftArm.X',
-    'mixamorig:LeftArm.Z',
-    'mixamorig:RightUpLeg.X',
-    'mixamorig:RightUpLeg.Y',
-    'mixamorig:RightUpLeg.Z',
-    'mixamorig:RightLeg.X',
-    'mixamorig:RightForeArm.Z',
-    'mixamorig:RightArm.Y',
-    'mixamorig:RightArm.X',
-    'mixamorig:RightArm.Z',
-    'mixamorig:LeftLeg.X',
-    'mixamorig:RightLeg.X',
-  ];
-
-  const bonesWithCustomAxesSchema = {
-    'mixamorig:LeftArm': {
-      custom_x_axis_local: 'bone_x_axis',
-      custom_z_axis_local: 'bone_z_axis',
-    },
-    'mixamorig:RightArm': {
-      custom_x_axis_local: 'bone_x_axis',
-      custom_z_axis_local: 'bone_z_axis',
-    },
-    'mixamorig:LeftUpLeg': {
-      custom_x_axis_local: 'bone_x_axis',
-      custom_z_axis_local: 'bone_z_axis',
-    },
-    'mixamorig:RightUpLeg': {
-      custom_x_axis_local: 'bone_x_axis',
-      custom_z_axis_local: 'bone_z_axis',
-    },
-  };
-
   return (
     <>
-      <div className="d-flex w-25">
-        <p className="w-50">max volt:</p>
-        <input type="text" className="form-control" value={maxVolt} />
-      </div>
-      <div className="row">
-        <div className="col-9">
-          <div className="row">
-            {bonesAxesNames.map((boneAxisName) => (
-              <div className="col-6">
-                <BoneAnlgeInput
-                  boneAxisName={boneAxisName}
-                  socketMessage={socketMessage}
-                  calibrationSigns={calibrationSigns}
-                  isCalibrationSignsLoading={isCalibrationSignsLoading}
-                />
-              </div>
-            ))}
-            <div className="my-4">
-              {isAnglesCalibrationPending ? (
-                <div className="spinner-border text-primary" role="status">
-                  {/* <span class="sr-only">Loading...</span> */}
-                </div>
-              ) : (
-                <button
-                  className="btn btn-primary"
-                  onClick={() => mutateAnglesCalibration()}
-                >
-                  calibrate angles
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="col-3">
-          {Object.keys(bonesWithCustomAxesSchema).map((boneName) => (
-            <>
+      <div>
+        <div className="row">
+          {bonesAxesConfig?.data?.map((boneAxisConfig) => (
+            <div className="col-4">
               <BoneCustomAxesInput
-                boneName={boneName}
-                calibratedCustomAxes={calibratedCustomAxes}
-                isCalibratedCustomAxesLoading={isCalibratedCustomAxesLoading}
+                boneAxisConfigData={boneAxisConfig}
+                boneCustomAxes={pageOptions?.data?.customAxes}
+                boneLocalAxes={pageOptions?.data?.axes}
+                socketMessage={socketMessage}
               />
-              <hr />
-            </>
+              <br />
+            </div>
           ))}
         </div>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            const event = new CustomEvent('calibrate-volts');
+            window.dispatchEvent(event);
+          }}
+        >
+          calibrate volts
+        </button>
       </div>
     </>
   );
