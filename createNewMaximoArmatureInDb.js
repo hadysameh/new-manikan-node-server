@@ -1,7 +1,7 @@
 const db = require('./models');
 const { groupBy } = require('lodash');
 const armatureData = {
-  name: 'Armature.002',
+  name: 'system-test',
 };
 
 (async () => {

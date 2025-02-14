@@ -46,7 +46,7 @@ arm_bone_radian_angles['Z'] = math.radians(${zAxisAngle})
 arm_bone_radian_angles['Y'] = math.radians(${yAxisAngle})
 
 selected_armature = bpy.data.objects["${armatureName}"]
-
+print("${armatureName}",selected_armature)
 # bpy.ops.object.mode_set(mode='POSE')
 bone_name="${boneName}"
 if bone_name in selected_armature.pose.bones:
@@ -188,6 +188,7 @@ let voltsToEmit = {};
 let bonesAnglesToEmit = {};
 
 setInterval(() => {
+  // console.log({ codesToEmit });
   global.io.emit('arduinoData', codesToEmit);
   global.io.emit('volts', voltsToEmit);
   global.io.emit('angles', bonesAnglesToEmit);

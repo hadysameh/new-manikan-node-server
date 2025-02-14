@@ -1,6 +1,6 @@
+const { Op } = require('sequelize');
 const db = require('./models');
 const { groupBy } = require('lodash');
-const { Op } = require('sequelize');
 const fs = require('fs');
 let dataHolder = {
   armatureName: '',
@@ -10,6 +10,7 @@ let dataHolder = {
   axes: ['X', 'Y', 'Z'],
   initialized: false,
 };
+
 const populateConfigDataHolder = async () => {
   dataHolder.initialized = false;
 
@@ -52,9 +53,11 @@ const populateConfigDataHolder = async () => {
     ],
   });
 
+  // console.log({ result });
+
   const mappedResult = result.map((row) => {
     const { dataValues } = row;
-    console.log({ dataValues });
+    // console.log({ dataValues });
     return {
       armatureBoneName: dataValues.armatureBoneName,
       bodyBoneName: dataValues.bodyBoneName,
@@ -66,8 +69,7 @@ const populateConfigDataHolder = async () => {
   });
   const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
   const config = await db.Config.findOne({});
-
-  dataHolder.armatureName = mappedResult[0].armatureBoneName;
+  dataHolder.armatureName = result[0].Bone.Armature.name;
   dataHolder.maxVolt = Number(config.maxVolt);
   dataHolder.maxAnlge = Number(config.maxAnlge);
   // dataHolder = { ...dataHolder, ...boneGrouppedResults };
@@ -126,7 +128,7 @@ const populateConfigDataHolder = async () => {
   dataHolder.initialized = true;
 };
 
-populateConfigDataHolder();
+populateConfigDataHolder().then(() => console.log({ dataHolder }));
 
 module.exports = {
   dataHolder,
