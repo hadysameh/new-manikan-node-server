@@ -70,7 +70,6 @@ const populateConfigDataHolder = async () => {
   });
   const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
   const config = await db.Config.findOne({});
-  console.log({ mappedResult });
   dataHolder.armatureName = mappedResult[0].armatureBoneName;
   dataHolder.maxVolt = Number(config.maxVolt);
   dataHolder.maxAnlge = Number(config.maxAnlge);

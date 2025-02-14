@@ -35,20 +35,33 @@ function App() {
     data: pageOptions,
     isLoading: isPageOptionsLoading,
     isSuccess: isPageOptionsFetched,
+    refetch: refetechCalibrationpageoptions,
   } = useQuery({
-    queryKey: ['calibrationpageoptions', selectedArmatureId],
+    queryKey: ['calibrationpageoptions'],
     queryFn: getPageOptions,
     staleTime: Infinity,
   });
 
-  const { data: bonesAxesConfig, isLoading: isCalibratedCustomAxesLoading } =
-    useQuery({
-      queryKey: ['selectandgetarmaturedata', selectedArmatureId],
-      queryFn: () => getAndSelectArmatureData(selectedArmatureId),
-      enabled: isPageOptionsFetched && !!selectedArmatureId,
-      staleTime: Infinity,
-    });
+  const {
+    data: bonesAxesConfig,
+    isLoading: isCalibratedCustomAxesLoading,
+    isFetched: isBonesAxesConfigFetched,
+  } = useQuery({
+    queryKey: ['selectandgetarmaturedata', selectedArmatureId],
+    queryFn: () => getAndSelectArmatureData(selectedArmatureId),
+    enabled: isPageOptionsFetched && !!selectedArmatureId,
+    staleTime: Infinity,
+  });
+
   useEffect(() => {
+    setTimeout(() => {
+      refetechCalibrationpageoptions();
+    }, 1000);
+  }, [selectedArmatureId]);
+
+  useEffect(() => {
+    console.log({ pageOptions });
+
     if (pageOptions && isPageOptionsFetched) {
       const activeArmature = pageOptions?.data?.armatures?.find(
         (armature) => armature.isActive === true
@@ -72,17 +85,17 @@ function App() {
     };
   }, []);
 
-  const rightColumn = [];
-  const leftColumn = [];
+  // const rightColumn = [];
+  // const leftColumn = [];
 
-  for (let index = 0; index < bonesAxesConfig?.data?.length; index++) {
-    const boneAxisConfig = bonesAxesConfig?.data?.[index];
-    if (index < bonesAxesConfig?.data?.length / 2) {
-      rightColumn.push(boneAxisConfig);
-    } else {
-      leftColumn.push(boneAxisConfig);
-    }
-  }
+  // for (let index = 0; index < bonesAxesConfig?.data?.length; index++) {
+  //   const boneAxisConfig = bonesAxesConfig?.data?.[index];
+  //   if (index < bonesAxesConfig?.data?.length / 2) {
+  //     rightColumn.push(boneAxisConfig);
+  //   } else {
+  //     leftColumn.push(boneAxisConfig);
+  //   }
+  // }
   return (
     <>
       <div>
@@ -93,6 +106,7 @@ function App() {
               setSelectedArmatureId(target.value);
             }}
             value={selectedArmatureId}
+            key={isPageOptionsLoading}
           >
             {pageOptions?.data?.armatures?.map((armature) => (
               <option value={armature.id}>{armature.name}</option>
@@ -100,18 +114,20 @@ function App() {
           </select>
         </div>
         <div className="row">
-          {bonesAxesConfig?.data?.map((boneAxisConfig) => (
-            <div className="col-4">
-              <BoneCustomAxesInput
-                boneAxisConfigData={boneAxisConfig}
-                boneCustomAxes={pageOptions?.data?.customAxes}
-                boneLocalAxes={pageOptions?.data?.axes}
-                voltsSocketMessage={voltsSocketMessage}
-                anglessocketMessage={anglessocketMessage}
-              />
-              <br />
-            </div>
-          ))}
+          {isBonesAxesConfigFetched
+            ? bonesAxesConfig?.data?.map((boneAxisConfig) => (
+                <div className="col-4">
+                  <BoneCustomAxesInput
+                    boneAxisConfigData={boneAxisConfig}
+                    boneCustomAxes={pageOptions?.data?.customAxes}
+                    boneLocalAxes={pageOptions?.data?.axes}
+                    voltsSocketMessage={voltsSocketMessage}
+                    anglessocketMessage={anglessocketMessage}
+                  />
+                  <br />
+                </div>
+              ))
+            : null}
         </div>
         <button
           className="btn btn-primary"

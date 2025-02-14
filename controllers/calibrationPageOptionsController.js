@@ -95,14 +95,10 @@ const updateBoneAxisConfig = catchAsync(async (req, res, next) => {
   standardResponse.ok(res);
 });
 
-const updateActiveArmature = catchAsync(async (req, res, next) => {
+const updateArmatureName = catchAsync(async (req, res, next) => {
   const { id: armatureToBeActive } = req.params;
-
-  await db.Armature.update({ isActive: false }, { where: { isActive: true } });
-  await db.Armature.update(
-    { isActive: true },
-    { where: { id: armatureToBeActive } }
-  );
+  const { name } = req.body;
+  await db.Armature.update({ name }, { where: { id: armatureToBeActive } });
   await populateConfigDataHolder();
 
   standardResponse.ok(res);
@@ -112,5 +108,5 @@ module.exports = {
   getCalibrationPageOptions,
   selectAndGetArmatureData,
   updateBoneAxisConfig,
-  updateActiveArmature,
+  updateArmatureName,
 };
