@@ -2,6 +2,7 @@ const db = require('../models');
 const catchAsync = require('../utils/catchAsync');
 const standardResponse = require('../utils/standardResponse');
 const { dataHolder, populateConfigDataHolder } = require('../configDataHolder');
+const { Op } = require('sequelize');
 
 const getCalibrationPageOptions = catchAsync(async (req, res, next) => {
   const armatures = await db.Armature.findAll();
@@ -12,42 +13,68 @@ const getCalibrationPageOptions = catchAsync(async (req, res, next) => {
 
 const selectAndGetArmatureData = catchAsync(async (req, res, next) => {
   const { id: armatureId } = req.params;
+  const transaction = await db.sequelize.transaction();
 
-  const armatureData = await db.BoneAxisConfig.findAll({
-    include: [
+  try {
+    await db.Armature.update(
+      { isActive: false },
+      { where: { isActive: true } },
+      { transaction }
+    );
+
+    await db.Armature.update(
+      { isActive: true },
+      { where: { id: armatureId } },
+      { transaction }
+    );
+
+    const armatureData = await db.BoneAxisConfig.findAll(
       {
-        model: db.Bone,
-        attributes: ['id'],
         include: [
           {
-            model: db.Armature,
-            attributes: ['name'],
-            where: { id: armatureId },
+            model: db.Bone,
+            where: {
+              bodyBoneName: { [Op.ne]: null },
+              armatureBoneName: { [Op.ne]: null },
+            },
+            attributes: ['id'],
+            include: [
+              {
+                model: db.Armature,
+                attributes: ['name'],
+                where: { id: armatureId },
+              },
+            ],
+          },
+          {
+            model: db.Axis,
+            attributes: ['id'],
+          },
+          {
+            model: db.CustomAxis,
+            attributes: ['id'],
           },
         ],
+        attributes: [
+          'id', // Include Post fields you want
+          'calibrationVolt',
+          'voltSign',
+          [db.sequelize.col(`Bone.bodyBoneName`), 'bodyBoneName'],
+          [db.sequelize.col('Bone.armatureBoneName'), 'armatureBoneName'],
+          [db.sequelize.col('Axis.name'), 'axisName'],
+          [db.sequelize.col('CustomAxis.name'), 'customAxisName'],
+        ],
       },
-      {
-        model: db.Axis,
-        attributes: ['id'],
-      },
-      {
-        model: db.CustomAxis,
-        attributes: ['id'],
-      },
-    ],
-    attributes: [
-      'id', // Include Post fields you want
-      'calibrationVolt',
-      'voltSign',
-      [db.sequelize.col(`Bone.bodyBoneName`), 'bodyBoneName'],
-      [db.sequelize.col('Bone.armatureBoneName'), 'armatureBoneName'],
-      [db.sequelize.col('Axis.name'), 'axisName'],
-      [db.sequelize.col('CustomAxis.name'), 'customAxisName'],
-    ],
-  });
-  dataHolder.armatureId = armatureId;
-  await populateConfigDataHolder();
-  standardResponse.ok(res, armatureData);
+      { transaction }
+    );
+    dataHolder.armatureId = armatureId;
+    await populateConfigDataHolder();
+    standardResponse.ok(res, armatureData);
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 });
 
 const updateBoneAxisConfig = catchAsync(async (req, res, next) => {
@@ -68,8 +95,22 @@ const updateBoneAxisConfig = catchAsync(async (req, res, next) => {
   standardResponse.ok(res);
 });
 
+const updateActiveArmature = catchAsync(async (req, res, next) => {
+  const { id: armatureToBeActive } = req.params;
+
+  await db.Armature.update({ isActive: false }, { where: { isActive: true } });
+  await db.Armature.update(
+    { isActive: true },
+    { where: { id: armatureToBeActive } }
+  );
+  await populateConfigDataHolder();
+
+  standardResponse.ok(res);
+});
+
 module.exports = {
   getCalibrationPageOptions,
   selectAndGetArmatureData,
   updateBoneAxisConfig,
+  updateActiveArmature,
 };

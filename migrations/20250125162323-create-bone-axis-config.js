@@ -53,11 +53,6 @@ module.exports = {
     });
 
     // Add a unique constraint to prevent duplicate associations
-    await queryInterface.addConstraint('boneAxisConfig', {
-      fields: ['boneId', 'axisId', 'customAxisId'],
-      type: 'unique',
-      name: 'unique_bone_axis_config',
-    });
   },
 
   down: async (queryInterface, Sequelize) => {

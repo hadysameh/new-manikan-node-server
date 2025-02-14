@@ -1,1 +1,134 @@
-{"armatureName":"Armature.001","initialized":true,"maxVolt":4.75,"maxAnlge":355,"LeftArm":[{"armatureBoneName":"Ctrl_Arm_FK_Left","bodyBoneName":"LeftArm","axisName":"X","customAxisName":"custom_z_axis_local","calibrationVolt":319,"voltSign":1},{"armatureBoneName":"Ctrl_Arm_FK_Left","bodyBoneName":"LeftArm","axisName":"Y","customAxisName":"custom_x_axis_local","calibrationVolt":1016,"voltSign":1},{"armatureBoneName":"Ctrl_Arm_FK_Left","bodyBoneName":"LeftArm","axisName":"Z","customAxisName":null,"calibrationVolt":449,"voltSign":1}],"LeftUpLeg":[{"armatureBoneName":"Ctrl_UpLeg_FK_Left","bodyBoneName":"LeftUpLeg","axisName":"X","customAxisName":"custom_x_axis_local","calibrationVolt":566,"voltSign":1},{"armatureBoneName":"Ctrl_UpLeg_FK_Left","bodyBoneName":"LeftUpLeg","axisName":"Y","customAxisName":"custom_z_axis_local","calibrationVolt":532,"voltSign":1},{"armatureBoneName":"Ctrl_UpLeg_FK_Left","bodyBoneName":"LeftUpLeg","axisName":"Z","customAxisName":null,"calibrationVolt":597,"voltSign":1}],"LeftLeg":[{"armatureBoneName":"Ctrl_Leg_FK_Left","bodyBoneName":"LeftLeg","axisName":"X","customAxisName":null,"calibrationVolt":840,"voltSign":1}],"LeftForeArm":[{"armatureBoneName":"Ctrl_ForeArm_FK_Left","bodyBoneName":"LeftForeArm","axisName":"Z","customAxisName":null,"calibrationVolt":900,"voltSign":-1}],"RightUpLeg":[{"armatureBoneName":"Ctrl_UpLeg_FK_Right","bodyBoneName":"RightUpLeg","axisName":"X","customAxisName":"custom_x_axis_local","calibrationVolt":671,"voltSign":-1},{"armatureBoneName":"Ctrl_UpLeg_FK_Right","bodyBoneName":"RightUpLeg","axisName":"Y","customAxisName":"custom_z_axis_local","calibrationVolt":406,"voltSign":-1},{"armatureBoneName":"Ctrl_UpLeg_FK_Right","bodyBoneName":"RightUpLeg","axisName":"Z","customAxisName":null,"calibrationVolt":498,"voltSign":-1}],"RightLeg":[{"armatureBoneName":"Ctrl_Leg_FK_Right","bodyBoneName":"RightLeg","axisName":"X","customAxisName":null,"calibrationVolt":995,"voltSign":-1}],"RightForeArm":[{"armatureBoneName":"Ctrl_ForeArm_FK_Right","bodyBoneName":"RightForeArm","axisName":"Z","customAxisName":null,"calibrationVolt":325,"voltSign":-1}],"RightArm":[{"armatureBoneName":"Ctrl_Arm_FK_Right","bodyBoneName":"RightArm","axisName":"X","customAxisName":"custom_z_axis_local","calibrationVolt":428,"voltSign":1},{"armatureBoneName":"Ctrl_Arm_FK_Right","bodyBoneName":"RightArm","axisName":"Y","customAxisName":"custom_x_axis_local","calibrationVolt":885,"voltSign":-1},{"armatureBoneName":"Ctrl_Arm_FK_Right","bodyBoneName":"RightArm","axisName":"Z","customAxisName":null,"calibrationVolt":421,"voltSign":-1}],"calibrationVolts":{"LeftArm.X":319,"LeftArm.Y":1016,"LeftArm.Z":449,"LeftUpLeg.X":566,"LeftUpLeg.Y":532,"LeftUpLeg.Z":597,"LeftLeg.X":840,"LeftForeArm.Z":900,"RightUpLeg.X":671,"RightUpLeg.Y":406,"RightUpLeg.Z":498,"RightLeg.X":995,"RightForeArm.Z":325,"RightArm.X":428,"RightArm.Y":885,"RightArm.Z":421},"bonesAxesVoltsSigns":{"LeftArm.X":1,"LeftArm.Y":1,"LeftArm.Z":1,"LeftUpLeg.X":1,"LeftUpLeg.Y":1,"LeftUpLeg.Z":1,"LeftLeg.X":1,"LeftForeArm.Z":-1,"RightUpLeg.X":-1,"RightUpLeg.Y":-1,"RightUpLeg.Z":-1,"RightLeg.X":-1,"RightForeArm.Z":-1,"RightArm.X":1,"RightArm.Y":-1,"RightArm.Z":-1},"bonesCustomAxesMappings":{"LeftArm.X":"custom_z_axis_local","LeftArm.Y":"custom_x_axis_local","LeftUpLeg.X":"custom_x_axis_local","LeftUpLeg.Y":"custom_z_axis_local","RightUpLeg.X":"custom_x_axis_local","RightUpLeg.Y":"custom_z_axis_local","RightArm.X":"custom_z_axis_local","RightArm.Y":"custom_x_axis_local"},"bonesAxesNamesMappings":{"LeftArm.X":"Ctrl_Arm_FK_Left.X","LeftArm.Y":"Ctrl_Arm_FK_Left.Y","LeftArm.Z":"Ctrl_Arm_FK_Left.Z","LeftUpLeg.X":"Ctrl_UpLeg_FK_Left.X","LeftUpLeg.Y":"Ctrl_UpLeg_FK_Left.Y","LeftUpLeg.Z":"Ctrl_UpLeg_FK_Left.Z","LeftLeg.X":"Ctrl_Leg_FK_Left.X","LeftForeArm.Z":"Ctrl_ForeArm_FK_Left.Z","RightUpLeg.X":"Ctrl_UpLeg_FK_Right.X","RightUpLeg.Y":"Ctrl_UpLeg_FK_Right.Y","RightUpLeg.Z":"Ctrl_UpLeg_FK_Right.Z","RightLeg.X":"Ctrl_Leg_FK_Right.X","RightForeArm.Z":"Ctrl_ForeArm_FK_Right.Z","RightArm.X":"Ctrl_Arm_FK_Right.X","RightArm.Y":"Ctrl_Arm_FK_Right.Y","RightArm.Z":"Ctrl_Arm_FK_Right.Z"}}
+const db = require('./models');
+const { groupBy } = require('lodash');
+const { Op } = require('sequelize');
+const fs = require('fs');
+let dataHolder = {
+  armatureName: '',
+  armatureId: null,
+  threeAxesLimbBones: ['LeftUpLeg', 'RightUpLeg', 'LeftArm', 'RightArm'],
+  singleAxisLimbBones: ['LeftForeArm', 'RightForeArm', 'LeftLeg', 'RightLeg'],
+  axes: ['X', 'Y', 'Z'],
+  initialized: false,
+};
+const populateConfigDataHolder = async () => {
+  dataHolder.initialized = false;
+
+  const result = await db.BoneAxisConfig.findAll({
+    include: [
+      {
+        model: db.Bone,
+        where: {
+          bodyBoneName: { [Op.ne]: null },
+          armatureBoneName: { [Op.ne]: null },
+        },
+        include: [
+          {
+            model: db.Armature,
+            attributes: ['name'],
+
+            where: {
+              isActive: true,
+            },
+          },
+        ],
+      },
+      {
+        model: db.Axis,
+        attributes: [],
+      },
+      {
+        model: db.CustomAxis,
+        attributes: [],
+      },
+    ],
+    attributes: [
+      'id', // Include Post fields you want
+      'calibrationVolt',
+      'voltSign',
+      [db.sequelize.col(`Bone.bodyBoneName`), 'bodyBoneName'],
+      [db.sequelize.col('Bone.armatureBoneName'), 'armatureBoneName'],
+      [db.sequelize.col('Axis.name'), 'axisName'],
+      [db.sequelize.col('CustomAxis.name'), 'customAxisName'],
+    ],
+  });
+
+  const mappedResult = result.map((row) => {
+    const { dataValues } = row;
+    console.log({ dataValues });
+    return {
+      armatureBoneName: dataValues.armatureBoneName,
+      bodyBoneName: dataValues.bodyBoneName,
+      axisName: dataValues.axisName,
+      customAxisName: dataValues.customAxisName,
+      calibrationVolt: dataValues.calibrationVolt,
+      voltSign: dataValues.voltSign,
+    };
+  });
+  const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
+  const config = await db.Config.findOne({});
+
+  dataHolder.armatureName = mappedResult[0].armatureBoneName;
+  dataHolder.maxVolt = Number(config.maxVolt);
+  dataHolder.maxAnlge = Number(config.maxAnlge);
+  // dataHolder = { ...dataHolder, ...boneGrouppedResults };
+
+  let calibrationVolts = {};
+  let bonesAxesVoltsSigns = {};
+  let bonesCustomAxesMappings = {};
+  let bonesAxesNamesMappings = {};
+  let bonesNamesMappings = {};
+  const localBoneAxesMapping = {
+    X: 'bone_x_axis',
+    Y: 'bone_y_axis',
+    Z: 'bone_z_axis',
+  };
+  for (const bodyBoneName in bonesGrouppedByName) {
+    const isBodyBoneName = Array.isArray(bonesGrouppedByName[bodyBoneName]);
+    if (!isBodyBoneName) continue;
+    bonesNamesMappings[bodyBoneName] =
+      bonesGrouppedByName[bodyBoneName][0].armatureBoneName;
+    const boneAxesData = bonesGrouppedByName[bodyBoneName];
+    const boneAxesCalibrationVolts = {};
+    const boneAxesVoltsSigns = {};
+    const boneCustomAxesMappings = {};
+
+    boneAxesData.forEach((boneAxisData) => {
+      const bodyBoneNameWithAxis = `${boneAxisData.bodyBoneName}.${boneAxisData.axisName}`;
+      const armatureBoneNameWithAxis = `${boneAxisData.armatureBoneName}.${boneAxisData.axisName}`;
+      bonesAxesNamesMappings[bodyBoneNameWithAxis] = armatureBoneNameWithAxis;
+      boneAxesCalibrationVolts[bodyBoneNameWithAxis] =
+        boneAxisData.calibrationVolt;
+
+      boneAxesVoltsSigns[bodyBoneNameWithAxis] = boneAxisData.voltSign;
+
+      calibrationVolts = { ...calibrationVolts, ...boneAxesCalibrationVolts };
+      bonesAxesVoltsSigns = { ...bonesAxesVoltsSigns, ...boneAxesVoltsSigns };
+      const { customAxisName } = boneAxisData;
+
+      if (customAxisName) {
+        // boneCustomAxesMappings[bodyBoneNameWithAxis] = customAxisName;
+        boneCustomAxesMappings[
+          `${boneAxisData.bodyBoneName}.${customAxisName}`
+        ] = localBoneAxesMapping[boneAxisData.axisName];
+      }
+      bonesCustomAxesMappings = {
+        ...bonesCustomAxesMappings,
+        ...boneCustomAxesMappings,
+      };
+    });
+  }
+
+  dataHolder.calibrationVolts = calibrationVolts;
+  dataHolder.bonesAxesVoltsSigns = bonesAxesVoltsSigns;
+  dataHolder.bonesCustomAxesMappings = bonesCustomAxesMappings;
+  dataHolder.bonesAxesNamesMappings = bonesAxesNamesMappings;
+  dataHolder.bonesNamesMappings = bonesNamesMappings;
+  dataHolder.initialized = true;
+};
+
+populateConfigDataHolder();
+
+module.exports = {
+  dataHolder,
+  populateConfigDataHolder,
+};

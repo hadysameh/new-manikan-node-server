@@ -29,26 +29,33 @@ const getAndSelectArmatureData = async (armatureId) => {
 function App() {
   const [voltsSocketMessage, setVoltsSocketMessage] = useState();
   const [anglessocketMessage, setAnglesSocketMessage] = useState();
-  const [maxVolt, setMaxVolt] = useState(4.75);
+  const [selectedArmatureId, setSelectedArmatureId] = useState();
 
   const {
     data: pageOptions,
     isLoading: isPageOptionsLoading,
     isSuccess: isPageOptionsFetched,
   } = useQuery({
-    queryKey: ['calibrationpageoptions'],
+    queryKey: ['calibrationpageoptions', selectedArmatureId],
     queryFn: getPageOptions,
     staleTime: Infinity,
   });
 
   const { data: bonesAxesConfig, isLoading: isCalibratedCustomAxesLoading } =
     useQuery({
-      queryKey: ['selectandgetarmaturedata'],
-      queryFn: () => getAndSelectArmatureData(1),
-      enabled: isPageOptionsFetched,
+      queryKey: ['selectandgetarmaturedata', selectedArmatureId],
+      queryFn: () => getAndSelectArmatureData(selectedArmatureId),
+      enabled: isPageOptionsFetched && !!selectedArmatureId,
       staleTime: Infinity,
     });
-  // console.log(pageOptions, bonesAxesConfig);
+  useEffect(() => {
+    if (pageOptions && isPageOptionsFetched) {
+      const activeArmature = pageOptions?.data?.armatures?.find(
+        (armature) => armature.isActive === true
+      );
+      setSelectedArmatureId(activeArmature?.id);
+    }
+  }, [pageOptions]);
 
   useEffect(() => {
     // Listen for messages from the server
@@ -79,6 +86,19 @@ function App() {
   return (
     <>
       <div>
+        <div className="my-3">
+          <select
+            className="form-select "
+            onChange={({ target }) => {
+              setSelectedArmatureId(target.value);
+            }}
+            value={selectedArmatureId}
+          >
+            {pageOptions?.data?.armatures?.map((armature) => (
+              <option value={armature.id}>{armature.name}</option>
+            ))}
+          </select>
+        </div>
         <div className="row">
           {bonesAxesConfig?.data?.map((boneAxisConfig) => (
             <div className="col-4">

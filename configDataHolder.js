@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const db = require('./models');
 const { groupBy } = require('lodash');
 const fs = require('fs');
@@ -12,24 +13,23 @@ let dataHolder = {
 
 const populateConfigDataHolder = async () => {
   dataHolder.initialized = false;
-  const armatureWhereQuery = {};
-
-  if (dataHolder.armatureId) {
-    armatureWhereQuery.id = dataHolder.armatureId;
-  } else {
-    armatureWhereQuery.isActive = true;
-  }
 
   const result = await db.BoneAxisConfig.findAll({
     include: [
       {
         model: db.Bone,
+        where: {
+          bodyBoneName: { [Op.ne]: null },
+          armatureBoneName: { [Op.ne]: null },
+        },
         include: [
           {
             model: db.Armature,
             attributes: ['name'],
 
-            where: armatureWhereQuery,
+            where: {
+              isActive: true,
+            },
           },
         ],
       },
@@ -53,8 +53,11 @@ const populateConfigDataHolder = async () => {
     ],
   });
 
+  // console.log({ result });
+
   const mappedResult = result.map((row) => {
     const { dataValues } = row;
+    // console.log({ dataValues });
     return {
       // armatureName: row.Bone.Armature.name,
       armatureBoneName: dataValues.armatureBoneName,
@@ -67,8 +70,8 @@ const populateConfigDataHolder = async () => {
   });
   const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
   const config = await db.Config.findOne({});
-
-  dataHolder.armatureName = result[0].Bone.Armature.name;
+  console.log({ mappedResult });
+  dataHolder.armatureName = mappedResult[0].armatureBoneName;
   dataHolder.maxVolt = Number(config.maxVolt);
   dataHolder.maxAnlge = Number(config.maxAnlge);
   // dataHolder = { ...dataHolder, ...boneGrouppedResults };
