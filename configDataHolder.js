@@ -14,60 +14,19 @@ let dataHolder = {
 const populateConfigDataHolder = async () => {
   dataHolder.initialized = false;
 
-  const result = await db.BoneAxisConfig.findAll({
+  const result = await db.Bone.findAll({
     include: [
       {
-        model: db.Bone,
+        model: db.Armature,
+        attributes: ['name'],
+
         where: {
-          bodyBoneName: { [Op.ne]: null },
-          armatureBoneName: { [Op.ne]: null },
+          isActive: true,
         },
-        include: [
-          {
-            model: db.Armature,
-            attributes: ['name'],
-
-            where: {
-              isActive: true,
-            },
-          },
-        ],
       },
-      {
-        model: db.Axis,
-        attributes: [],
-      },
-      {
-        model: db.CustomAxis,
-        attributes: [],
-      },
-    ],
-    attributes: [
-      'id', // Include Post fields you want
-      'calibrationVolt',
-      'voltSign',
-      [db.sequelize.col(`Bone.bodyBoneName`), 'bodyBoneName'],
-      [db.sequelize.col('Bone.armatureBoneName'), 'armatureBoneName'],
-      [db.sequelize.col('Axis.name'), 'axisName'],
-      [db.sequelize.col('CustomAxis.name'), 'customAxisName'],
     ],
   });
 
-  // console.log({ result });
-
-  const mappedResult = result.map((row) => {
-    const { dataValues } = row;
-    // console.log({ dataValues });
-    return {
-      // armatureName: row.Bone.Armature.name,
-      armatureBoneName: dataValues.armatureBoneName,
-      bodyBoneName: dataValues.bodyBoneName,
-      axisName: dataValues.axisName,
-      customAxisName: dataValues.customAxisName,
-      calibrationVolt: dataValues.calibrationVolt,
-      voltSign: dataValues.voltSign,
-    };
-  });
   const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
   const config = await db.Config.findOne({});
   dataHolder.armatureName = result[0].Bone.Armature.name;

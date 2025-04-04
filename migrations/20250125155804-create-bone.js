@@ -9,10 +9,7 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      bodyBoneName: {
-        type: Sequelize.STRING,
-      },
-      armatureBoneName: {
+      boneName: {
         type: Sequelize.STRING,
       },
       armatureId: {
@@ -25,6 +22,45 @@ module.exports = {
         onUpdate: 'CASCADE', // Optional: Update the foreign key if the referenced key is updated
         onDelete: 'CASCADE', // Optional: Delete the record if the referenced key is deleted
       },
+      AVoltSign: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      BVoltSign: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      CVoltSign: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+
+      ACalibrationVolt: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      BCalibrationVolt: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      CCalibrationVolt: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+
+      ALocalAxisMapping: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      BLocalAxisMapping: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      CLocalAxisMapping: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

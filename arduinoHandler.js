@@ -215,25 +215,25 @@ const handleArduinoData = (data, sideName) => {
     // console.log({ data });
     let recievedBonesVolts = {};
     const leftBonesVolts = {
-      'LeftLeg.X': parsedData[0],
-      'LeftUpLeg.Y': parsedData[1],
-      'LeftUpLeg.Z': parsedData[2],
-      'LeftUpLeg.X': parsedData[3],
-      'LeftArm.X': parsedData[4],
-      'LeftArm.Z': parsedData[5],
-      'LeftArm.Y': parsedData[6],
-      'LeftForeArm.Z': parsedData[7],
+      'Ctrl_Leg_FK_Left.X': parsedData[0],
+      'Ctrl_UpLeg_FK_Left.Y': parsedData[1],
+      'Ctrl_UpLeg_FK_Left.Z': parsedData[2],
+      'Ctrl_UpLeg_FK_Left.X': parsedData[3],
+      'Ctrl_Arm_FK_Left.X': parsedData[4],
+      'Ctrl_Arm_FK_Left.Z': parsedData[5],
+      'Ctrl_Arm_FK_Left.Y': parsedData[6],
+      'Ctrl_ForeArm_FK_Left.Z': parsedData[7],
     };
 
     const rightBonesVolts = {
-      'RightLeg.X': parsedData[0],
-      'RightUpLeg.Y': parsedData[1],
-      'RightUpLeg.Z': parsedData[2],
-      'RightUpLeg.X': parsedData[3],
-      'RightArm.X': parsedData[4],
-      'RightArm.Z': parsedData[5],
-      'RightArm.Y': parsedData[6],
-      'RightForeArm.Z': parsedData[7],
+      'Ctrl_Leg_FK_Right.X': parsedData[0],
+      'Ctrl_UpLeg_FK_Right.Y': parsedData[1],
+      'Ctrl_UpLeg_FK_Right.Z': parsedData[2],
+      'Ctrl_UpLeg_FK_Right.X': parsedData[3],
+      'Ctrl_Arm_FK_Right.X': parsedData[4],
+      'Ctrl_Arm_FK_Right.Z': parsedData[5],
+      'Ctrl_Arm_FK_Right.Y': parsedData[6],
+      'Ctrl_ForeArm_FK_Right.Z': parsedData[7],
     };
     if (sideName == 'left') {
       recievedBonesVolts = { ...leftBonesVolts };

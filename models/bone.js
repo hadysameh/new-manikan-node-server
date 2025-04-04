@@ -10,24 +10,13 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Bone.belongsTo(models.Armature, { foreignKey: 'armatureId' });
-      Bone.belongsToMany(models.Axis, {
-        through: models.BoneAxisConfig, // Join table
-        foreignKey: 'boneId', // Foreign key in the join table referencing Project
-      });
-      Bone.belongsToMany(models.CustomAxis, {
-        through: models.BoneAxisConfig, // Join table
-        foreignKey: 'boneId', // Foreign key in the join table referencing Project
-      });
-
-      Bone.hasMany(models.BoneAxisConfig, {
-        foreignKey: 'boneId', // Foreign key in the join table referencing Project
-      });
     }
   }
   Bone.init(
     {
-      bodyBoneName: DataTypes.STRING,
-      armatureBoneName: DataTypes.STRING,
+      boneName: {
+        type: DataTypes.STRING,
+      },
       armatureId: {
         // Foreign key to the User model
         type: DataTypes.INTEGER,
@@ -36,6 +25,39 @@ module.exports = (sequelize, DataTypes) => {
           model: 'Armatures', // Name of the referenced table
           key: 'id', // Primary key of the referenced table
         },
+      },
+
+      AVoltSign: {
+        type: DataTypes.INTEGER,
+      },
+      AVoltSign: {
+        type: DataTypes.INTEGER,
+      },
+      AVoltSign: {
+        type: DataTypes.INTEGER,
+      },
+
+      ACalibrationVolt: {
+        type: DataTypes.INTEGER,
+      },
+      BCalibrationVolt: {
+        type: DataTypes.INTEGER,
+      },
+      CCalibrationVolt: {
+        type: DataTypes.INTEGER,
+      },
+
+      ALocalAxisMapping: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      BLocalAxisMapping: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      CLocalAxisMapping: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
     },
     {
