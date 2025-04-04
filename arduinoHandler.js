@@ -253,7 +253,7 @@ const handleArduinoData = (data, sideName) => {
       ...codesForThreeAxesBones,
       ...codesForOneAxisBones,
     };
-    // console.log({ 'dataHolder.calibrationVolts': dataHolder.calibrationVolts });
+
     Object.assign(codesToEmit, newCodesToEmit);
 
     Object.assign(bonesAnglesToEmit, bonesAngles);

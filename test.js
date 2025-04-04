@@ -128,8 +128,86 @@ const populateConfigDataHolder = async () => {
   dataHolder.initialized = true;
 };
 
-populateConfigDataHolder().then(() => console.log({ dataHolder }));
-
+// populateConfigDataHolder().then(() => console.log({ dataHolder }));
+db.Bone.bulkCreate([
+  {
+    boneName: 'Ctrl_ForeArm_FK_Left',
+    armatureId: 1,
+    AVoltSign: null,
+    ACalibrationVolt: null,
+    BCalibrationVolt: null,
+    CCalibrationVolt: null,
+    ALocalAxisMapping: 'Z',
+    BLocalAxisMapping: null,
+    CLocalAxisMapping: null,
+  },
+  {
+    boneName: 'Ctrl_Arm_FK_Right',
+    armatureId: 1,
+    AVoltSign: null,
+    ACalibrationVolt: null,
+    BCalibrationVolt: null,
+    CCalibrationVolt: null,
+    ALocalAxisMapping: 'Y',
+    BLocalAxisMapping: 'X',
+    CLocalAxisMapping: 'Y',
+  },
+  {
+    boneName: 'Ctrl_ForeArm_FK_Right',
+    armatureId: 1,
+    AVoltSign: null,
+    ACalibrationVolt: null,
+    BCalibrationVolt: null,
+    CCalibrationVolt: null,
+    ALocalAxisMapping: 'Z',
+    BLocalAxisMapping: null,
+    CLocalAxisMapping: null,
+  },
+  {
+    boneName: 'Ctrl_UpLeg_FK_Left',
+    armatureId: 1,
+    AVoltSign: null,
+    ACalibrationVolt: null,
+    BCalibrationVolt: null,
+    CCalibrationVolt: null,
+    ALocalAxisMapping: 'X',
+    BLocalAxisMapping: 'Z',
+    CLocalAxisMapping: 'Y',
+  },
+  {
+    boneName: 'Ctrl_Leg_FK_Left',
+    armatureId: 1,
+    AVoltSign: null,
+    ACalibrationVolt: null,
+    BCalibrationVolt: null,
+    CCalibrationVolt: null,
+    ALocalAxisMapping: 'X',
+    BLocalAxisMapping: null,
+    CLocalAxisMapping: null,
+  },
+  {
+    boneName: 'Ctrl_UpLeg_FK_Right',
+    armatureId: 1,
+    AVoltSign: null,
+    ACalibrationVolt: null,
+    BCalibrationVolt: null,
+    CCalibrationVolt: null,
+    ALocalAxisMapping: 'X',
+    BLocalAxisMapping: 'Z',
+    CLocalAxisMapping: 'Y',
+  },
+  {
+    boneName: 'Ctrl_Leg_FK_Right',
+    armatureId: 1,
+    AVoltSign: null,
+    ACalibrationVolt: null,
+    BCalibrationVolt: null,
+    CCalibrationVolt: null,
+    ALocalAxisMapping: 'X',
+    BLocalAxisMapping: null,
+    CLocalAxisMapping: null,
+  },
+]);
 module.exports = {
   dataHolder,
   populateConfigDataHolder,

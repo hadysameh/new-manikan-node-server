@@ -13,72 +13,27 @@ let dataHolder = {
 
 const populateConfigDataHolder = async () => {
   dataHolder.initialized = false;
+  const config = await db.Config.findOne({});
 
-  const result = await db.Bone.findAll({
+  const bones = await db.Bone.findAll({
     include: [
       {
         model: db.Armature,
         attributes: ['name'],
 
         where: {
-          isActive: true,
+          id: config.activeArmatureId,
         },
       },
     ],
   });
 
-  const bonesGrouppedByName = groupBy(mappedResult, 'bodyBoneName');
-  const config = await db.Config.findOne({});
-  dataHolder.armatureName = result[0].Bone.Armature.name;
+  dataHolder.armatureName = bones[0].Bone.Armature.name;
   dataHolder.maxVolt = Number(config.maxVolt);
   dataHolder.maxAnlge = Number(config.maxAnlge);
-  // dataHolder = { ...dataHolder, ...boneGrouppedResults };
+  const mappedBones = groupBy(bones, 'boneName');
 
   let calibrationVolts = {};
-  let bonesAxesVoltsSigns = {};
-  let bonesCustomAxesMappings = {};
-  let bonesAxesNamesMappings = {};
-  let bonesNamesMappings = {};
-  const localBoneAxesMapping = {
-    X: 'bone_x_axis',
-    Y: 'bone_y_axis',
-    Z: 'bone_z_axis',
-  };
-  for (const bodyBoneName in bonesGrouppedByName) {
-    const isBodyBoneName = Array.isArray(bonesGrouppedByName[bodyBoneName]);
-    if (!isBodyBoneName) continue;
-    bonesNamesMappings[bodyBoneName] =
-      bonesGrouppedByName[bodyBoneName][0].armatureBoneName;
-    const boneAxesData = bonesGrouppedByName[bodyBoneName];
-    const boneAxesCalibrationVolts = {};
-    const boneAxesVoltsSigns = {};
-    const boneCustomAxesMappings = {};
-
-    boneAxesData.forEach((boneAxisData) => {
-      const bodyBoneNameWithAxis = `${boneAxisData.bodyBoneName}.${boneAxisData.axisName}`;
-      const armatureBoneNameWithAxis = `${boneAxisData.armatureBoneName}.${boneAxisData.axisName}`;
-      bonesAxesNamesMappings[bodyBoneNameWithAxis] = armatureBoneNameWithAxis;
-      boneAxesCalibrationVolts[bodyBoneNameWithAxis] =
-        boneAxisData.calibrationVolt;
-
-      boneAxesVoltsSigns[bodyBoneNameWithAxis] = boneAxisData.voltSign;
-
-      calibrationVolts = { ...calibrationVolts, ...boneAxesCalibrationVolts };
-      bonesAxesVoltsSigns = { ...bonesAxesVoltsSigns, ...boneAxesVoltsSigns };
-      const { customAxisName } = boneAxisData;
-
-      if (customAxisName) {
-        // boneCustomAxesMappings[bodyBoneNameWithAxis] = customAxisName;
-        boneCustomAxesMappings[
-          `${boneAxisData.bodyBoneName}.${customAxisName}`
-        ] = localBoneAxesMapping[boneAxisData.axisName];
-      }
-      bonesCustomAxesMappings = {
-        ...bonesCustomAxesMappings,
-        ...boneCustomAxesMappings,
-      };
-    });
-  }
 
   dataHolder.calibrationVolts = calibrationVolts;
   dataHolder.bonesAxesVoltsSigns = bonesAxesVoltsSigns;
