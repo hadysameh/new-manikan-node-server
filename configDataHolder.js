@@ -28,19 +28,10 @@ const populateConfigDataHolder = async () => {
     ],
   });
 
-  dataHolder.armatureName = bones[0].Bone.Armature.name;
+  dataHolder.armatureName = bones[0].Armature.name;
   dataHolder.maxVolt = Number(config.maxVolt);
   dataHolder.maxAnlge = Number(config.maxAnlge);
   const mappedBones = groupBy(bones, 'boneName');
-
-  let calibrationVolts = {};
-
-  dataHolder.calibrationVolts = calibrationVolts;
-  dataHolder.bonesAxesVoltsSigns = bonesAxesVoltsSigns;
-  dataHolder.bonesCustomAxesMappings = bonesCustomAxesMappings;
-  dataHolder.bonesAxesNamesMappings = bonesAxesNamesMappings;
-  dataHolder.bonesNamesMappings = bonesNamesMappings;
-  dataHolder.initialized = true;
 };
 
 populateConfigDataHolder();
