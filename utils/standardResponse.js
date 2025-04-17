@@ -15,7 +15,7 @@ const ok = (response, data, message = 'successfull operation') => {
   });
 };
 
-const created = (response, data, message = 'deleted successfully') => {
+const created = (response, data, message = 'created successfully') => {
   response.status(200).json({
     status: 1,
     message,

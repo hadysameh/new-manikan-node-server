@@ -30,10 +30,10 @@ module.exports = (sequelize, DataTypes) => {
       AVoltSign: {
         type: DataTypes.INTEGER,
       },
-      AVoltSign: {
+      BVoltSign: {
         type: DataTypes.INTEGER,
       },
-      AVoltSign: {
+      CVoltSign: {
         type: DataTypes.INTEGER,
       },
 
