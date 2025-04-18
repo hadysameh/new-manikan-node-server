@@ -6,6 +6,8 @@ const globalErrorHandler = require('./utils/globalErrorHandler.js');
 const armatureRouter = require('./routes/armatureRouter.js');
 const boneRouter = require('./routes/boneRouter.js');
 const configRouter = require('./routes/configRouter.js');
+const emitArduinoDataToClients = require('./arduinoHandler.js');
+const { populateConfigDataHolder } = require('./configDataHolder.js');
 
 const app = express();
 
@@ -35,6 +37,10 @@ app.get('/*', (req, res) => {
   res.sendFile(__dirname + '/react-ui/dist/index.html');
 });
 
+populateConfigDataHolder();
+
 app.use(globalErrorHandler);
-// emitArduinoDataToClients();
+
+emitArduinoDataToClients();
+
 module.exports = app;

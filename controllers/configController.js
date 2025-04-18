@@ -10,17 +10,23 @@ const getOne = catchAsync(async (req, res, next) => {
   standardResponse.ok(res, bonesAxisConfig);
 });
 
-const create = catchAsync(async (req, res, next) => {
+const update = catchAsync(async (req, res, next) => {
   const { maxVolt, maxAnlge, activeArmatureId } = req.body;
-  await db.Config.create({
-    maxVolt,
-    maxAnlge,
-    activeArmatureId,
+  const lastRecord = await Config.findOne({
+    order: [['id', 'DESC']],
   });
+
+  if (lastRecord) {
+    await lastRecord.update({
+      maxVolt,
+      maxAnlge,
+      activeArmatureId,
+    });
+  }
   standardResponse.created(res);
 });
 
 module.exports = {
   getOne,
-  create,
+  update,
 };

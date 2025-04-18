@@ -1,9 +1,9 @@
 const express = require('express');
-const { getOne, create } = require('../controllers/configController');
+const { getOne, update } = require('../controllers/configController');
 
 const configRouter = express.Router();
 
 configRouter.get('/', getOne);
-configRouter.post('/', create);
+configRouter.put('/', update);
 
 module.exports = configRouter;

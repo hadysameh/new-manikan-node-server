@@ -32,6 +32,8 @@ const populateConfigDataHolder = async () => {
   dataHolder.maxVolt = Number(config.maxVolt);
   dataHolder.maxAnlge = Number(config.maxAnlge);
   const mappedBones = groupBy(bones, 'boneName');
+  dataHolder.bonesData = mappedBones;
+  dataHolder.initialized = true;
 };
 
 populateConfigDataHolder();
