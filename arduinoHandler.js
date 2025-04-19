@@ -62,7 +62,7 @@ const getBoneAnglesMap = (calibratedBonesAngles) => {
 };
 
 const getChangedBonesNames = (calibratedBonesAxesAngles) => {
-  const changeThershold = 1;
+  const changeThershold = 10;
   const newBonesAnglesMap = getBoneAnglesMap(calibratedBonesAxesAngles);
   const oldBonesAnglesMap = getBoneAnglesMap(lastSentBonesAngles);
   const changedBonesAngles = [];
@@ -83,15 +83,60 @@ const getChangedBonesNames = (calibratedBonesAxesAngles) => {
   return changedBonesAngles;
 };
 
-const getBonesCodes = (changedBonesAngles) => {
-  // steps
-  // 0- get bones maps
-  // 1- get the bones that has changes
-  // 2- get codes for changes bones
+const getBonePythonCode = (boneName, robotBoneAnglesMap) => {
+  const { armatureName } = dataHolder;
+  const boneConfig = dataHolder.bonesData[boneName][0];
+  const blenderBoneAxesAngles = {
+    X: 0,
+    Y: 0,
+  };
 
-  for (const boneNameWithRobotAxis in changedBonesAngles) {
-    const robotAxisAngle = changedBonesAngles[boneNameWithRobotAxis];
+  boneConfig.ALocalAxisMapping
+    ? (blenderBoneAxesAngles[boneConfig.ALocalAxisMapping] =
+        robotBoneAnglesMap?.A || 0)
+    : null;
+
+  boneConfig.BLocalAxisMapping
+    ? (blenderBoneAxesAngles[boneConfig.BLocalAxisMapping] =
+        robotBoneAnglesMap?.B || 0)
+    : null;
+
+  return `
+selected_armature = bpy.data.objects["${armatureName}"]
+shoulder_bone_in_pose_mode = selected_armature.pose.bones["${boneName}"]
+if shoulder_bone_in_pose_mode:
+    x = math.radians(${blenderBoneAxesAngles.X})
+    y = math.radians(${blenderBoneAxesAngles.Y})
+    z = math.radians(0)
+    shoulder_bone_in_pose_mode.rotation_mode = "XYZ"  # Enforce gimbal lock
+    bpy.context.view_layer.update()
+
+    shoulder_bone_in_pose_mode.rotation_euler = mathutils.Euler((x, y, z), "XYZ")
+    bpy.context.view_layer.update()
+    #  ============================================================
+    modify_y = math.radians(${robotBoneAnglesMap?.C || 0})
+    # Convert current rotation to matrix
+    bone_matrix = shoulder_bone_in_pose_mode.matrix
+    # Create a rotation matrix for local Y axis
+    local_y_rotation = mathutils.Matrix.Rotation(
+        modify_y, 4, shoulder_bone_in_pose_mode.y_axis
+    )
+    # Apply new rotation by multiplying the local rotation
+    shoulder_bone_in_pose_mode.matrix = local_y_rotation @ bone_matrix
+    bpy.context.view_layer.update()
+  `;
+};
+
+const getBonesCodes = (bonesNamesToGetCodesFor, calibratedBonesAxesAngles) => {
+  const calibratedBonesAnglesMap = getBoneAnglesMap(calibratedBonesAxesAngles);
+  const bonesCodesMap = {};
+  for (const boneName of bonesNamesToGetCodesFor) {
+    bonesCodesMap[boneName] = getBonePythonCode(
+      boneName,
+      calibratedBonesAnglesMap[boneName]
+    );
   }
+  return bonesCodesMap;
 };
 
 function calibrateBonesVoltages(bonesNamesWithAxis) {
@@ -148,7 +193,7 @@ const handleArduinoData = (data, sideName) => {
       return;
     }
     // console.log({ data });
-    let recievedBonesVolts = {};
+    let recievedRobotBonesVolts = {};
     const leftBonesVolts = {
       'Ctrl_Leg_FK_Left.A': parsedData[0],
       'Ctrl_UpLeg_FK_Left.B': parsedData[1],
@@ -172,20 +217,30 @@ const handleArduinoData = (data, sideName) => {
     };
 
     if (sideName == 'left') {
-      recievedBonesVolts = { ...leftBonesVolts };
+      recievedRobotBonesVolts = { ...leftBonesVolts };
       Object.assign(voltsToEmit, leftBonesVolts);
     } else if (sideName == 'right') {
       Object.assign(voltsToEmit, rightBonesVolts);
-      recievedBonesVolts = { ...rightBonesVolts };
+      recievedRobotBonesVolts = { ...rightBonesVolts };
     }
 
-    const calibratedBonesAxesVolts = calibrateBonesVoltages(recievedBonesVolts);
-    let calibratedBonesAxesAngles = getBonesAngles(calibratedBonesAxesVolts);
-    const changedBonesNames = getChangedBonesNames(calibratedBonesAxesAngles);
-    console.log({ changedBonesNames });
-    Object.assign(lastSentBonesAngles, calibratedBonesAxesAngles);
+    const calibratedRobotBonesAxesVolts = calibrateBonesVoltages(
+      recievedRobotBonesVolts
+    );
+    let calibratedRobotBonesAxesAngles = getBonesAngles(
+      calibratedRobotBonesAxesVolts
+    );
+    const changedBonesNames = getChangedBonesNames(
+      calibratedRobotBonesAxesAngles
+    );
+    Object.assign(lastSentBonesAngles, calibratedRobotBonesAxesAngles);
 
-    // const codesToEmit = getBonesCodes(changedBonesNames);
+    const codesToEmit = getBonesCodes(
+      changedBonesNames,
+      calibratedRobotBonesAxesAngles
+    );
+    console.log({ codesToEmit });
+
     // const codesForOneAxisBones = getCodesForOneAxisBones(bonesAxesAngles);
 
     // const newCodesToEmit = {
